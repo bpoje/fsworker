@@ -26,6 +26,21 @@ public class DataConverter {
 		return value;
 	}
 	
+	public static char getValueFrom1Byte(byte oneByte)
+	{
+		byte temp[] = new byte[2];
+		temp[0] = oneByte;
+		temp[1] = 0;
+		
+		//for (int i = 0; i < temp.length; i++)
+		//	System.out.printf("0x%02X\n", temp[i]);
+		
+		ByteBuffer byteBuffer = ByteBuffer.wrap(temp);
+		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+		char value = byteBuffer.getChar();
+		return value;
+	}
+	
 	//Convert 2 bytes to java char data type (2 bytes, UNSIGNED, Unicode, 0 to 65,535)
 	public static char getValueFrom2Bytes(byte [] buffer, int offsetByte)
 	{

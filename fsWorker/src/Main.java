@@ -44,11 +44,17 @@ public class Main {
 				case FAT12:
 				case FAT16:
 					
+					
+					
+					
+					//AA
+					/*
 					//count of sectors occupied by ONE FAT
 					long sizeOfOneFAT = biosParameterBlock.getFATSz();
 					
 					//count of FAT data structures on the volume
 					char numberOfFATs = biosParameterBlock.getBPB_NumFATs();
+					
 					
 					//Number of reserved sectors in the Reserved region of the volume
 					//starting at the first sector of the volume.
@@ -60,7 +66,10 @@ public class Main {
 					long rootDirectoryAddress = (sizeOfOneFAT * (long)numberOfFATs + (long)numberOfReservedSectors) * (long)bytesPerSector;
 					System.out.println("rootDirectoryAddress: " + rootDirectoryAddress);
 					System.out.printf("rootDirectoryAddress: 0x%02Xh\n", rootDirectoryAddress);
+					*/
+					//-AA
 					
+					/*
 					//If a filename is fewer than eight characters in length, it is padded with space characters.
 					String filename = DataConverter.getStringFrom8Bytes(buffer, (int)rootDirectoryAddress + 0);
 					
@@ -139,21 +148,36 @@ public class Main {
 					long filesizeInBytes = DataConverter.getValueFrom4Bytes(buffer, (int)rootDirectoryAddress + 28);
 					
 					System.out.println("filesizeInBytes: " + filesizeInBytes);
+					*/
 					
+					/*
 					//Maximum number of entries in the root directory
 					char maxEntriesInRootDirectory = biosParameterBlock.getBPB_RootEntCnt();
 					
 					//Calculate total space occupied by the root directory
 					final long directoryEntrySize = 32; //bytes
-					
-					
+					*/
+					/*
 					long rootDirectorySizeInBytes = (long)maxEntriesInRootDirectory * directoryEntrySize;
 					long rootDirectorySizeInBlocks = rootDirectorySizeInBytes / (long)bytesPerSector;
 					
 					System.out.println("rootDirectorySizeInBytes: " + rootDirectorySizeInBytes);
 					System.out.println("rootDirectorySizeInKBytes: " + rootDirectorySizeInBytes / 1024);
 					System.out.println("rootDirectorySizeInBlocks: " + rootDirectorySizeInBlocks);
+					*/
 					
+					
+					RootDirectory rootDir = new RootDirectory(biosParameterBlock, buffer);
+					FAT12_16 fat12_16 = new FAT12_16(biosParameterBlock);
+					
+					
+					
+					
+					
+					
+					
+					
+					/*
 					long address = rootDirectoryAddress + rootDirectorySizeInBytes;
 					
 					System.out.println("address: " + address);
@@ -208,6 +232,7 @@ public class Main {
 						System.out.println("newClusterNumber: " + (int)newClusterNumber);
 						System.out.printf("newClusterNumber: 0x%02Xh\n", (int)newClusterNumber);
 					}
+					*/
 					
 					break;
 					
