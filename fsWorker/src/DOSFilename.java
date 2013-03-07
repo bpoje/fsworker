@@ -4,8 +4,8 @@ public class DOSFilename extends RootDirectoryEntry {
 	private String filename;
 	private String filenameExtension;
 	//private char fileAttributes;
-	char startingClusterNumber;
-	long filesizeInBytes;
+	private char startingClusterNumber;
+	private long filesizeInBytes;
 	
 	/*
 	boolean isReadOnlyFile;
@@ -170,15 +170,16 @@ public class DOSFilename extends RootDirectoryEntry {
 		
 		long bytesPerCluster = dataRegion.getBytesPerCluster();
 		
-		long remainingDataBytes = filesizeInBytes;
+		//long remainingDataBytes = filesizeInBytes;
 		long clustersNeeded = (long)Math.ceil((float)filesizeInBytes / (float)bytesPerCluster);
 		
 		System.out.println("filesizeInBytes: " + filesizeInBytes);
 		System.out.println("bytesPerCluster: " + bytesPerCluster);
 		System.out.println("clustersNeeded: " + clustersNeeded);
 		
-		byte fileData[] = new byte[(int)(clustersNeeded * bytesPerCluster)];
-		int loopCounter = 0;
+		byte fileData[] = new byte[(int)(filesizeInBytes)];
+		System.out.println("fileData.length: " + fileData.length);
+		int clusterCounter = 0;
 		
 		//while (remainingDataBytes > 0)
 		while ((int)clusterNumber != (int)0xFFFF)
@@ -190,16 +191,18 @@ public class DOSFilename extends RootDirectoryEntry {
 			
 			byte cluster[] = dataRegion.getClusterData(address);
 			
-			remainingDataBytes -= bytesPerCluster;
+			//remainingDataBytes -= bytesPerCluster;
 			
-			for (int i=0; i < cluster.length; i++)
+			//Copy cluster to fileData array
+			//for (int i=0; i < cluster.length; i++)
+			for (int i=0; i < cluster.length && (int)(clusterCounter * bytesPerCluster) + i < fileData.length; i++)
 			{
-				fileData[(int)(loopCounter * bytesPerCluster) + i] = cluster[i];
-			//	System.out.printf("0x%02Xh ", cluster[i]);
+				fileData[(int)(clusterCounter * bytesPerCluster) + i] = cluster[i];
+				//System.out.printf("0x%02Xh ", cluster[i]);
 			}
 			//System.out.println();
 			
-			loopCounter++;
+			clusterCounter++;
 			
 			//Get pointer from FAT
 			long fatPointerAddress = fat12_16.getFATPointerAddress(clusterNumber);
@@ -230,5 +233,20 @@ public class DOSFilename extends RootDirectoryEntry {
 		
 		return fileData;
 	}
-	
+
+	public String getFilename() {
+		return filename;
+	}
+
+	public String getFilenameExtension() {
+		return filenameExtension;
+	}
+
+	public char getStartingClusterNumber() {
+		return startingClusterNumber;
+	}
+
+	public long getFilesizeInBytes() {
+		return filesizeInBytes;
+	}
 }
