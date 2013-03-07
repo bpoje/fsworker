@@ -94,7 +94,13 @@ public class RootDirectory {
 			else
 			{
 				DOSFilename dosFilename = new DOSFilename((char)entryNumber, entryAddress, buffer);
-				dosFilename.getData(dataRegion, fat12_16);
+				byte fileData[] = dosFilename.getData(dataRegion, fat12_16);
+				
+				//If not folder
+				if (fileData != null)
+				{
+					System.out.println("fileData.length: " + fileData.length);
+				}
 			}
 		}
 		
