@@ -9,14 +9,11 @@ public class RootDirectory {
 	
 	public RootDirectory(BIOSParameterBlock biosParameterBlock, byte buffer[])
 	{
-		
-		//AA
 		//count of sectors occupied by ONE FAT
 		long sizeOfOneFAT = biosParameterBlock.getFATSz();
 		
 		//count of FAT data structures on the volume
 		char numberOfFATs = biosParameterBlock.getBPB_NumFATs();
-		//-AA
 		
 		//Number of reserved sectors in the Reserved region of the volume
 		//starting at the first sector of the volume.
@@ -25,16 +22,21 @@ public class RootDirectory {
 		char bytesPerSector = biosParameterBlock.getBPB_BytsPerSec();
 		
 		//Address of root directory
-		rootDirectoryAddress = (sizeOfOneFAT * (long)numberOfFATs + (long)numberOfReservedSectors) * (long)bytesPerSector;
+		rootDirectoryAddress = calculateRootDirectoryAddress(sizeOfOneFAT, numberOfFATs, numberOfReservedSectors, bytesPerSector);
+		
 		System.out.println("rootDirectoryAddress: " + rootDirectoryAddress);
 		System.out.printf("rootDirectoryAddress: 0x%02Xh\n", rootDirectoryAddress);
+		
+		//long add = calculateRootDirectoryAddress(biosParameterBlock);
+		//System.out.println("x: " + rootDirectoryAddress + " y: " + add);
 		
 		//Maximum number of entries in the root directory
 		maxEntriesInRootDirectory = biosParameterBlock.getBPB_RootEntCnt();
 		
 		//Calculate total space occupied by the root directory
-		rootDirectorySizeInBytes = (long)maxEntriesInRootDirectory * RootDirectoryEntry.rootDirectoryEntrySize;
-		rootDirectorySizeInBlocks = rootDirectorySizeInBytes / (long)bytesPerSector;
+		rootDirectorySizeInBytes = calculateRootDirectorySizeInBytes(biosParameterBlock);
+		rootDirectorySizeInBlocks = calculateRootDirectorySizeInBlocks(biosParameterBlock);
+		//-----
 		
 		System.out.println("rootDirectorySizeInBytes: " + rootDirectorySizeInBytes);
 		System.out.println("rootDirectorySizeInKBytes: " + rootDirectorySizeInBytes / 1024);
@@ -91,6 +93,61 @@ public class RootDirectory {
 		
 	}
 	
+	public static long calculateRootDirectoryAddress(BIOSParameterBlock biosParameterBlock)
+	{
+		//BB
+				//AA
+				//count of sectors occupied by ONE FAT
+				long sizeOfOneFAT = biosParameterBlock.getFATSz();
+				
+				//count of FAT data structures on the volume
+				char numberOfFATs = biosParameterBlock.getBPB_NumFATs();
+				//-AA
+				
+				//Number of reserved sectors in the Reserved region of the volume
+				//starting at the first sector of the volume.
+				char numberOfReservedSectors = biosParameterBlock.getBPB_RsvdSecCnt();
+				
+				char bytesPerSector = biosParameterBlock.getBPB_BytsPerSec();
+				
+				//Address of root directory
+				long myRootDirectoryAddress = (sizeOfOneFAT * (long)numberOfFATs + (long)numberOfReservedSectors) * (long)bytesPerSector;
+				//System.out.println("myRootDirectoryAddress: " + myRootDirectoryAddress);
+				//System.out.printf("myRootDirectoryAddress: 0x%02Xh\n", myRootDirectoryAddress);
+				
+				return myRootDirectoryAddress;
+	}
+	
+	//sizeOfOneFAT - count of sectors occupied by ONE FAT
+	//numberOfFATs - count of FAT data structures on the volume
+	//numberOfReservedSectors - Number of reserved sectors in the Reserved region of the volume starting at the first sector of the volume.
+	//bytesPerSector
+	public static long calculateRootDirectoryAddress(long sizeOfOneFAT, char numberOfFATs, char numberOfReservedSectors, char bytesPerSector)
+	{
+		//Address of root directory
+		long myRootDirectoryAddress = (sizeOfOneFAT * (long)numberOfFATs + (long)numberOfReservedSectors) * (long)bytesPerSector;
+		//System.out.println("myRootDirectoryAddress: " + myRootDirectoryAddress);
+		//System.out.printf("myRootDirectoryAddress: 0x%02Xh\n", myRootDirectoryAddress);
+				
+		return myRootDirectoryAddress;
+	}
+	
+	public static long calculateRootDirectorySizeInBytes(BIOSParameterBlock biosParameterBlock)
+	{
+		char myMaxEntriesInRootDirectory = biosParameterBlock.getBPB_RootEntCnt();
+		long myRootDirectorySizeInBytes = (long)myMaxEntriesInRootDirectory * RootDirectoryEntry.rootDirectoryEntrySize;
+		return myRootDirectorySizeInBytes;
+	}
+	
+	public static long calculateRootDirectorySizeInBlocks(BIOSParameterBlock biosParameterBlock)
+	{
+		long myRootDirectorySizeInBytes = calculateRootDirectorySizeInBytes(biosParameterBlock);
+		char bytesPerSector = biosParameterBlock.getBPB_BytsPerSec();
+		long myRootDirectorySizeInBlocks = myRootDirectorySizeInBytes / (long)bytesPerSector;
+		
+		return myRootDirectorySizeInBlocks;
+	}
+	
 	public long calculateRootDirectoryEntryAddress(char entryNumber, byte buffer[])
 	{
 		long entryAddress = (long)rootDirectoryAddress + (long)entryNumber * RootDirectoryEntry.rootDirectoryEntrySize;
@@ -100,8 +157,4 @@ public class RootDirectory {
 		
 		return entryAddress;
 	}
-	
-	
-	
-	
 }

@@ -14,6 +14,9 @@ public class Main {
 		
 		try
 		{
+			String path = new java.io.File(".").getCanonicalPath();
+			System.out.println("Current path: " + path);
+			
 			File file = new File(args[0]);
 			FileInputStream fs = new FileInputStream(file);
 			
@@ -169,7 +172,7 @@ public class Main {
 					
 					RootDirectory rootDir = new RootDirectory(biosParameterBlock, buffer);
 					FAT12_16 fat12_16 = new FAT12_16(biosParameterBlock);
-					
+					DataRegion dataRegion = new DataRegion(biosParameterBlock);
 					
 					
 					

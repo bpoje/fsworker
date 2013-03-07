@@ -160,4 +160,9 @@ public class DOSFilename extends RootDirectoryEntry {
 		
 	}
 	
+	public void getData()
+	{
+		
+	}
+	
 }
