@@ -169,10 +169,10 @@ public class Main {
 					System.out.println("rootDirectorySizeInBlocks: " + rootDirectorySizeInBlocks);
 					*/
 					
+					DataRegion dataRegion = new DataRegion(biosParameterBlock, buffer);
+					FAT12_16 fat12_16 = new FAT12_16(biosParameterBlock, buffer);
+					RootDirectory rootDir = new RootDirectory(biosParameterBlock, buffer, dataRegion, fat12_16);
 					
-					RootDirectory rootDir = new RootDirectory(biosParameterBlock, buffer);
-					FAT12_16 fat12_16 = new FAT12_16(biosParameterBlock);
-					DataRegion dataRegion = new DataRegion(biosParameterBlock);
 					
 					
 					

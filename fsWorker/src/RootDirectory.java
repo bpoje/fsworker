@@ -7,8 +7,14 @@ public class RootDirectory {
 	private long rootDirectorySizeInBytes;
 	private long rootDirectorySizeInBlocks;
 	
-	public RootDirectory(BIOSParameterBlock biosParameterBlock, byte buffer[])
+	private DataRegion dataRegion;
+	private FAT12_16 fat12_16;
+	
+	public RootDirectory(BIOSParameterBlock biosParameterBlock, byte buffer[], DataRegion dataRegion, FAT12_16 fat12_16)
 	{
+		this.dataRegion = dataRegion;
+		this.fat12_16 = fat12_16;
+		
 		//count of sectors occupied by ONE FAT
 		long sizeOfOneFAT = biosParameterBlock.getFATSz();
 		
@@ -88,6 +94,7 @@ public class RootDirectory {
 			else
 			{
 				DOSFilename dosFilename = new DOSFilename((char)entryNumber, entryAddress, buffer);
+				dosFilename.getData(dataRegion, fat12_16);
 			}
 		}
 		

@@ -5,8 +5,9 @@ public class FAT12_16 {
 	private ArrayList<Long> FATAddresses = new ArrayList<Long>();
 	private long sizeOfOneFAT;
 	private char numberOfFATs;
+	private byte[] buffer;
 	
-	public FAT12_16(BIOSParameterBlock biosParameterBlock)
+	public FAT12_16(BIOSParameterBlock biosParameterBlock, byte[] buffer)
 	{
 		//count of sectors occupied by ONE FAT
 		sizeOfOneFAT = biosParameterBlock.getFATSz();
@@ -47,7 +48,37 @@ public class FAT12_16 {
 			System.out.printf("FATTableAddresses.get(%d): 0x%02Xh\n", i, FATAddresses.get(i));
 		}
 		
+		this.buffer = buffer;
+	}
+	
+	public long getFATPointerAddress(char clusterNumber)
+	{
+		//Get pointer from FAT
+		//long FATPointerAddress = FAT1Address + (long)startingClusterNumber * 2;
+		long FATPointerAddress = FATAddresses.get(0) + (long)clusterNumber * (long)2;
 		
-		
+		return FATPointerAddress;
+	}
+	
+	public char getFATPointerValue(long fatPointerAddress)
+	{
+		char newClusterNumber = DataConverter.getValueFrom2Bytes(buffer, (int)fatPointerAddress);
+		return newClusterNumber;
+	}
+
+	public ArrayList<Long> getFATAddresses() {
+		return FATAddresses;
+	}
+
+	public long getSizeOfOneFAT() {
+		return sizeOfOneFAT;
+	}
+
+	public char getNumberOfFATs() {
+		return numberOfFATs;
+	}
+
+	public byte[] getBuffer() {
+		return buffer;
 	}
 }
