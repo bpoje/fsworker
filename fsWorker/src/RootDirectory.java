@@ -12,10 +12,14 @@ public class RootDirectory {
 	private DataRegion dataRegion;
 	private FAT12_16 fat12_16;
 	
+	private byte buffer[];
+	
 	public RootDirectory(BIOSParameterBlock biosParameterBlock, byte buffer[], DataRegion dataRegion, FAT12_16 fat12_16)
 	{
 		this.dataRegion = dataRegion;
 		this.fat12_16 = fat12_16;
+		
+		this.buffer = buffer;
 		
 		//count of sectors occupied by ONE FAT
 		long sizeOfOneFAT = biosParameterBlock.getFATSz();
@@ -71,6 +75,12 @@ public class RootDirectory {
 		}
 		*/
 		
+		
+		
+	}
+	
+	public void directory()
+	{
 		for (int entryNumber = 0; entryNumber < (int)maxEntriesInRootDirectory; entryNumber++)
 		{
 			long entryAddress = calculateRootDirectoryEntryAddress((char)entryNumber, buffer);
@@ -96,6 +106,29 @@ public class RootDirectory {
 			else
 			{
 				DOSFilename dosFilename = new DOSFilename((char)entryNumber, entryAddress, buffer);
+				boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
+				
+				
+				if (isSubdirectory)
+				{
+					System.out.println("isSubdirectory: " + isSubdirectory);
+					long adr = dataRegion.getClusterAddress(dosFilename.getStartingClusterNumber());
+					
+					System.out.println("adr: " + adr);
+					System.out.printf("adr: 0x%02Xh\n", adr);
+					
+					byte temp[] = dataRegion.getClusterData(adr);
+					for (int i = 0; i < temp.length; i++)
+					{
+						System.out.printf("0x%02Xh ", temp[i]);
+					}
+					System.out.println();
+					
+					System.out.println("---------------------------------------------------------");
+					subDirectory(adr);
+					System.out.println("---------------------------------------------------------");
+				}
+				
 				byte fileData[] = dosFilename.getData(dataRegion, fat12_16);
 				
 				//If not folder
@@ -128,7 +161,89 @@ public class RootDirectory {
 				}
 			}
 		}
-		
+	}
+	
+	public void subDirectory(long address)
+	{
+		for (int entryNumber = 0; entryNumber < (int)maxEntriesInRootDirectory; entryNumber++)
+		{
+			//long entryAddress = calculateRootDirectoryEntryAddress((char)entryNumber, buffer);
+			
+			//calculateSubDirectoryEntryAddress(long address, char entryNumber, byte buffer[])
+			long entryAddress = calculateSubDirectoryEntryAddress(address, (char)entryNumber, buffer);
+			
+			RootDirectoryEntry entry = new RootDirectoryEntry((char) entryNumber, entryAddress, buffer);
+			
+			FilenameStatus filenameStatus = entry.getFilenameStatus();
+			//Break for loop if end-of-list
+			if (filenameStatus == FilenameStatus.entryIsAvailableAndNoSubsequentEntryIsInUse)
+				break;
+			
+			System.out.println("\t entryNumber = : " + entryNumber);
+			System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
+			
+			System.out.println("entry.isLongFilenameEntry(): " + entry.isLongFilenameEntry());
+			System.out.println("entry.getFilenameStatus(): " + entry.getFilenameStatus());
+			
+			if (entry.isLongFilenameEntry())
+			{
+				LongFileNameEntry longFileNameEntry = new LongFileNameEntry((char)entryNumber, entryAddress, buffer);
+				System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
+			}
+			else
+			{
+				DOSFilename dosFilename = new DOSFilename((char)entryNumber, entryAddress, buffer);
+				boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
+				
+				
+				if (isSubdirectory)
+				{
+					System.out.println("isSubdirectory: " + isSubdirectory);
+					long adr = dataRegion.getClusterAddress(dosFilename.getStartingClusterNumber());
+					
+					System.out.println("adr: " + adr);
+					System.out.printf("adr: 0x%02Xh\n", adr);
+					
+					byte temp[] = dataRegion.getClusterData(adr);
+					for (int i = 0; i < temp.length; i++)
+					{
+						System.out.printf("0x%02Xh ", temp[i]);
+					}
+					System.out.println();
+				}
+				
+				byte fileData[] = dosFilename.getData(dataRegion, fat12_16);
+				
+				//If not folder
+				if (fileData != null)
+				{
+					System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
+					System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
+					
+					//byte[] bytesOfMessage = yourString.getBytes("UTF-8");
+					try
+					{
+						MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+						byte[] md5digest = messageDigest.digest(fileData);
+						
+						//convert the byte to hex format
+				        StringBuffer md5HexString = new StringBuffer();
+				    	for (int i = 0; i < md5digest.length; i++)
+				    	{
+				    		String hex=Integer.toHexString(0xff & md5digest[i]);
+				   	     	if(hex.length()==1) md5HexString.append('0');
+				   	     md5HexString.append(hex);
+				    	}
+				    	
+				    	System.out.println("MD5 digest(in hex format):: " + md5HexString.toString());
+					}
+					catch (Exception e)
+					{
+						System.out.println(e);
+					}
+				}
+			}
+		}
 	}
 	
 	public static long calculateRootDirectoryAddress(BIOSParameterBlock biosParameterBlock)
@@ -189,6 +304,16 @@ public class RootDirectory {
 	public long calculateRootDirectoryEntryAddress(char entryNumber, byte buffer[])
 	{
 		long entryAddress = (long)rootDirectoryAddress + (long)entryNumber * RootDirectoryEntry.rootDirectoryEntrySize;
+		
+		//System.out.println("entryAddress: " + entryAddress);
+		//System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
+		
+		return entryAddress;
+	}
+	
+	public long calculateSubDirectoryEntryAddress(long address, char entryNumber, byte buffer[])
+	{
+		long entryAddress = (long)address + (long)entryNumber * RootDirectoryEntry.rootDirectoryEntrySize;
 		
 		//System.out.println("entryAddress: " + entryAddress);
 		//System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
