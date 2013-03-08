@@ -19,6 +19,8 @@ import org.jdesktop.swingx.treetable.*;
 import org.jdesktop.swingx.decorator.*;
 
 import fat.DOSFilename;
+import fat.DataRegion;
+import fat.FAT12_16;
 import fat.RootDirectory;
 import fat.RootDirectoryEntry;
 
@@ -30,9 +32,17 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class MainView extends JFrame {
-	public MainView(String title, RootDirectory rootDir)
+	private RootDirectory rootDir;
+	private DataRegion dataRegion;
+	private FAT12_16 fat12_16;
+	
+	public MainView(String title, RootDirectory rootDir, DataRegion dataRegion, FAT12_16 fat12_16)
 	{
 		super(title);
+		
+		this.rootDir = rootDir;
+		this.dataRegion = dataRegion;
+		this.fat12_16 = fat12_16;
 		
 		setSize(800, 400);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -104,34 +114,14 @@ public class MainView extends JFrame {
 		
 		
 		
-		ArrayList<RootDirectoryEntry> files = rootDir.directory();
+		ArrayList<RootDirectoryEntry> filesInFolder = rootDir.directory();
 		
-		System.out.println("files.size(): " + files.size());
+		System.out.println("files.size(): " + filesInFolder.size());
 		
 		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData("CF","","","",true));
 		
-		for (int i = 0; i < files.size(); i++)
-		{
-			DOSFilename file = (DOSFilename)files.get(i);
-			
-			String filename = file.getFilename();
-			String filenameExtension = file.getFilenameExtension();
-			char startingClusterNumber = file.getStartingClusterNumber();
-			long filesizeInBytes = file.getFilesizeInBytes();
-			String sStartingClusterNumber = Long.toString((long)startingClusterNumber);
-			String sFilesizeInBytes = Long.toString(filesizeInBytes);
-			
-			if (!file.isSubdirectoryEntry())
-			{
-				rootNode.add(new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,false)));
-			}
-			else
-			{
-				DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,false));
-				subNode.add(new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,false)));
-				rootNode.add(subNode);
-			}
-		}
+		//Recursively
+		scanFileSystem(filesInFolder, rootNode);
 		
 		//rootNode.add(incomeNode);
 		
@@ -145,6 +135,64 @@ public class MainView extends JFrame {
         binTree.setTreeCellRenderer(new TreeTableCellRenderer());
         
         this.getContentPane().add(new JScrollPane(binTree));
+	}
+	
+	private void scanFileSystem(ArrayList<RootDirectoryEntry> files, DefaultMutableTreeNode treeNode)
+	{
+		for (int i = 0; i < files.size(); i++)
+		{
+			DOSFilename file = (DOSFilename)files.get(i);
+			
+			String filename = file.getFilename();
+			String filenameExtension = file.getFilenameExtension();
+			char startingClusterNumber = file.getStartingClusterNumber();
+			long filesizeInBytes = file.getFilesizeInBytes();
+			String md5 = file.calculateMd5(dataRegion, fat12_16);
+			
+			String sStartingClusterNumber = Long.toString((long)startingClusterNumber);
+			String sFilesizeInBytes = Long.toString(filesizeInBytes);
+			
+			if (!file.isSubdirectoryEntry())
+			{
+				treeNode.add(new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,false)));
+			}
+			else
+			{
+				DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,true));
+				
+				long adr = dataRegion.getClusterAddress(file.getStartingClusterNumber());
+				ArrayList<RootDirectoryEntry> filesInSubdir = rootDir.subDirectory(adr);
+				
+				System.out.println("filesInSubdir.size(): " + filesInSubdir.size());
+				
+				/*
+				//DEBUG
+				for (int j = 0; j < filesInSubdir.size(); j++)
+				{
+					RootDirectoryEntry temp = filesInSubdir.get(j);
+					System.out.println(j);
+					System.out.println("temp.isArchiveFlag(): " + temp.isArchiveFlag());
+					System.out.println("temp.isHiddenFile(): " + temp.isHiddenFile());
+					System.out.println("temp.isLongFilenameEntry(): " + temp.isLongFilenameEntry());
+					System.out.println("temp.isReadOnlyFile(): " + temp.isReadOnlyFile());
+					System.out.println("temp.isSpecialEntry(): " + temp.isSpecialEntry());
+					System.out.println("temp.isSubdirectoryEntry(): " + temp.isSubdirectoryEntry());
+					System.out.println("temp.isSystemFile(): " + temp.isSystemFile());
+					System.out.println();
+					
+					DOSFilename temp1 = (DOSFilename)temp;
+					System.out.println("temp1.getFilename(): " + temp1.getFilename());
+				}
+				*/
+				
+				//Ignore . and .. in search
+				if (filename.compareToIgnoreCase(".") != 0 && filename.compareToIgnoreCase("..") != 0)
+					scanFileSystem(filesInSubdir, subNode);
+				
+				//subNode.add(new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,false)));
+				treeNode.add(subNode);
+			}
+		}
 	}
 	
 	private void  configureCommonTableProperties(JXTable table) {

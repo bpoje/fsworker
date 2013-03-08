@@ -1,5 +1,7 @@
 package fat;
 
+import hash.Hash;
+
 import java.security.MessageDigest;
 import java.util.ArrayList;
 
@@ -143,27 +145,8 @@ public class RootDirectory {
 					System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
 					System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
 					
-					//byte[] bytesOfMessage = yourString.getBytes("UTF-8");
-					try
-					{
-						MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-						byte[] md5digest = messageDigest.digest(fileData);
-						
-						//convert the byte to hex format
-				        StringBuffer md5HexString = new StringBuffer();
-				    	for (int i = 0; i < md5digest.length; i++)
-				    	{
-				    		String hex=Integer.toHexString(0xff & md5digest[i]);
-				   	     	if(hex.length()==1) md5HexString.append('0');
-				   	     md5HexString.append(hex);
-				    	}
-				    	
-				    	System.out.println("MD5 digest(in hex format):: " + md5HexString.toString());
-					}
-					catch (Exception e)
-					{
-						System.out.println(e);
-					}
+					String md5 = Hash.getMd5FromFileData(fileData);
+					System.out.println("MD5 digest(in hex format):: " + md5);
 				}
 			}
 		}
@@ -171,8 +154,10 @@ public class RootDirectory {
 		return arrayListFiles;
 	}
 	
-	public void subDirectory(long address)
+	public ArrayList<RootDirectoryEntry> subDirectory(long address)
 	{
+		ArrayList<RootDirectoryEntry> arrayListFiles = new ArrayList<RootDirectoryEntry>();
+		
 		for (int entryNumber = 0; entryNumber < (int)maxEntriesInRootDirectory; entryNumber++)
 		{
 			//long entryAddress = calculateRootDirectoryEntryAddress((char)entryNumber, buffer);
@@ -203,6 +188,7 @@ public class RootDirectory {
 				DOSFilename dosFilename = new DOSFilename((char)entryNumber, entryAddress, buffer);
 				boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
 				
+				arrayListFiles.add(dosFilename);
 				
 				if (isSubdirectory)
 				{
@@ -228,31 +214,16 @@ public class RootDirectory {
 					System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
 					System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
 					
-					//byte[] bytesOfMessage = yourString.getBytes("UTF-8");
-					try
-					{
-						MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-						byte[] md5digest = messageDigest.digest(fileData);
-						
-						//convert the byte to hex format
-				        StringBuffer md5HexString = new StringBuffer();
-				    	for (int i = 0; i < md5digest.length; i++)
-				    	{
-				    		String hex=Integer.toHexString(0xff & md5digest[i]);
-				   	     	if(hex.length()==1) md5HexString.append('0');
-				   	     md5HexString.append(hex);
-				    	}
-				    	
-				    	System.out.println("MD5 digest(in hex format):: " + md5HexString.toString());
-					}
-					catch (Exception e)
-					{
-						System.out.println(e);
-					}
+					String md5 = Hash.getMd5FromFileData(fileData);
+					System.out.println("MD5 digest(in hex format):: " + md5);
 				}
 			}
 		}
+		
+		return arrayListFiles;
 	}
+	
+	
 	
 	public static long calculateRootDirectoryAddress(BIOSParameterBlock biosParameterBlock)
 	{

@@ -1,5 +1,7 @@
 package fat;
 
+import hash.Hash;
+
 public class DOSFilename extends RootDirectoryEntry {
 
 	private String filename;
@@ -233,6 +235,25 @@ public class DOSFilename extends RootDirectoryEntry {
 		*/
 		
 		return fileData;
+	}
+	
+	public String calculateMd5(DataRegion dataRegion, FAT12_16 fat12_16)
+	{
+		byte fileData[] = getData(dataRegion, fat12_16);
+		
+		String md5 = null;
+		
+		//If not folder
+		if (fileData != null)
+		{
+			System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
+			System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + getFilesizeInBytes());
+			
+			md5 = Hash.getMd5FromFileData(fileData);
+			System.out.println("MD5 digest(in hex format):: " + md5);
+		}
+		
+		return md5;
 	}
 
 	public String getFilename() {
