@@ -1,3 +1,5 @@
+import gui.MainView;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Arrays;
@@ -174,6 +176,8 @@ public class Main {
 					RootDirectory rootDir = new RootDirectory(biosParameterBlock, buffer, dataRegion, fat12_16);
 					rootDir.directory();
 					
+					MainView mainView = new MainView("Title");
+					mainView.setVisible(true);
 					
 					
 					
