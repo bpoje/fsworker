@@ -1,3 +1,4 @@
+package fat;
 
 public enum FilenameStatus {
 	entryIsAvailableAndNoSubsequentEntryIsInUse,

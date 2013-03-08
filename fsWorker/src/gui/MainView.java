@@ -3,6 +3,7 @@ package gui;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.io.File;
+import java.util.ArrayList;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JFrame;
@@ -16,6 +17,11 @@ import org.jdesktop.swingx.renderer.DefaultTableRenderer;
 import org.jdesktop.swingx.renderer.StringValue;
 import org.jdesktop.swingx.treetable.*;
 import org.jdesktop.swingx.decorator.*;
+
+import fat.DOSFilename;
+import fat.RootDirectory;
+import fat.RootDirectoryEntry;
+
 import javax.swing.JScrollPane;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -24,29 +30,16 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class MainView extends JFrame {
-	public MainView(String title)
+	public MainView(String title, RootDirectory rootDir)
 	{
 		super(title);
 		
 		setSize(800, 400);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		//TreeTableModel  treeTableModel = new FileSystemModel(); // any TreeTableModel
-  		//JXTreeTable     treeTable = new JXTreeTable(treeTableModel);
-  		//JScrollPane     scrollpane = new JScrollPane(treeTable);
-  		
-		//FileSystemModel fileSystemModel = new FileSystemModel(new File("a1"));
-		//TreeTableModel  treeTableModel = fileSystemModel;
-		//JXTreeTable     treeTable = new JXTreeTable(treeTableModel);
-  		//JScrollPane     scrollpane = new JScrollPane(treeTable);
-		
-  		//JTree fileTree = new JTree(fileSystemModel);
-  		//fileTree.
-		
-  		//fileTree.setEditable(true);
-  	    
 		//-------------------------------------------------------------------------------
 		/*
+		//JTable example
 		DefaultTableModel model  = new DefaultTableModel();
 		model.addColumn("CF Source");
 		model.addColumn("Client");
@@ -65,6 +58,9 @@ public class MainView extends JFrame {
 		*/
 		//-------------------------------------------------------------------------------
 		
+		//-------------------------------------------------------------------------------
+		/*
+		//JXTreeTable example
 		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData("CF","","","",true));
 		
 		DefaultMutableTreeNode incomeNode = new DefaultMutableTreeNode(new TableRowData("Income","25000","5000","300000",true));
@@ -95,24 +91,60 @@ public class MainView extends JFrame {
 	
     	JXTreeTable binTree = new JXTreeTable(new MyTreeModel(rootNode));
     	
-    	//Highlighter highligher = HighlighterFactory.createSimpleStriping(HighlighterFactory.BEIGE);
-    	//binTree.setHighlighters(highligher);
+    	Highlighter highligher = HighlighterFactory.createSimpleStriping(HighlighterFactory.BEIGE);
+    	binTree.setHighlighters(highligher);
         binTree.setShowGrid(false);
         binTree.setShowsRootHandles(true);
         configureCommonTableProperties(binTree);
         binTree.setTreeCellRenderer(new TreeTableCellRenderer());
-		
-        //this.getContentPane().add(new JScrollPane(binTree));
+        
         this.getContentPane().add(new JScrollPane(binTree));
+        */
+      //-------------------------------------------------------------------------------
+		
+		
+		
+		ArrayList<RootDirectoryEntry> files = rootDir.directory();
+		
+		System.out.println("files.size(): " + files.size());
+		
+		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData("CF","","","",true));
+		
+		for (int i = 0; i < files.size(); i++)
+		{
+			DOSFilename file = (DOSFilename)files.get(i);
+			
+			String filename = file.getFilename();
+			String filenameExtension = file.getFilenameExtension();
+			char startingClusterNumber = file.getStartingClusterNumber();
+			long filesizeInBytes = file.getFilesizeInBytes();
+			String sStartingClusterNumber = Long.toString((long)startingClusterNumber);
+			String sFilesizeInBytes = Long.toString(filesizeInBytes);
+			
+			if (!file.isSubdirectoryEntry())
+			{
+				rootNode.add(new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,false)));
+			}
+			else
+			{
+				DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,false));
+				subNode.add(new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,false)));
+				rootNode.add(subNode);
+			}
+		}
+		
+		//rootNode.add(incomeNode);
+		
+		JXTreeTable binTree = new JXTreeTable(new MyTreeModel(rootNode));
+    	
+    	Highlighter highligher = HighlighterFactory.createSimpleStriping(HighlighterFactory.BEIGE);
+    	binTree.setHighlighters(highligher);
+        binTree.setShowGrid(false);
+        binTree.setShowsRootHandles(true);
+        configureCommonTableProperties(binTree);
+        binTree.setTreeCellRenderer(new TreeTableCellRenderer());
         
-  		//this.getContentPane().add(treeTable);
-        
-        //JFrame frame = new JFrame("Tree Table Demo");
-        //frame.getContentPane().add(new JScrollPane(binTree));
-        //frame.setSize(new java.awt.Dimension(400, 400));
-        //frame.setLocation(280, 50);
-        //frame.setIconImage(icon);
-        //frame.setVisible(true);
+        this.getContentPane().add(new JScrollPane(binTree));
 	}
 	
 	private void  configureCommonTableProperties(JXTable table) {

@@ -1,3 +1,5 @@
+package fat;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 

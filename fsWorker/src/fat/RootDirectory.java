@@ -1,4 +1,7 @@
+package fat;
+
 import java.security.MessageDigest;
+import java.util.ArrayList;
 
 
 public class RootDirectory {
@@ -79,8 +82,10 @@ public class RootDirectory {
 		
 	}
 	
-	public void directory()
+	public ArrayList<RootDirectoryEntry> directory()
 	{
+		ArrayList<RootDirectoryEntry> arrayListFiles = new ArrayList<RootDirectoryEntry>();
+		
 		for (int entryNumber = 0; entryNumber < (int)maxEntriesInRootDirectory; entryNumber++)
 		{
 			long entryAddress = calculateRootDirectoryEntryAddress((char)entryNumber, buffer);
@@ -108,6 +113,7 @@ public class RootDirectory {
 				DOSFilename dosFilename = new DOSFilename((char)entryNumber, entryAddress, buffer);
 				boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
 				
+				arrayListFiles.add(dosFilename);
 				
 				if (isSubdirectory)
 				{
@@ -161,6 +167,8 @@ public class RootDirectory {
 				}
 			}
 		}
+		
+		return arrayListFiles;
 	}
 	
 	public void subDirectory(long address)

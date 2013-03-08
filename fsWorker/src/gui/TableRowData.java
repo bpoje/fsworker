@@ -2,10 +2,10 @@ package gui;
 
 public class TableRowData
 {
-	private String source = null;
-	private String client;
-	private String spouse;
-	private String family;
+	private String filename = null;
+	private String filenameExtension;
+	private String startingClusterNumber;
+	private String filesizeInBytes;
 	private boolean isRoot;
 	/**
 	 * Created on: Feb 23, 2008
@@ -16,41 +16,41 @@ public class TableRowData
 	 * @param family
 	 * @param isRoot
 	 */
-	public TableRowData(String source, String client, String spouse, String family, boolean isLeaf)
+	public TableRowData(String filename, String filenameExtension, String startingClusterNumber, String filesizeInBytes, boolean isLeaf)
 	{
-		this.source = source;
-		this.client = client;
-		this.spouse = spouse;
-		this.family = family;
+		this.filename = filename;
+		this.filenameExtension = filenameExtension;
+		this.startingClusterNumber = startingClusterNumber;
+		this.filesizeInBytes = filesizeInBytes;
 		this.isRoot = isLeaf;
 	}
 	/**
 	 * @return the client
 	 */
-	public String getClient()
+	public String getFilenameExtension()
 	{
-		return client;
+		return filenameExtension;
 	}
 	/**
 	 * @param client the client to set
 	 */
-	public void setClient(String client)
+	public void setFilenameExtension(String filenameExtension)
 	{
-		this.client = client;
+		this.filenameExtension = filenameExtension;
 	}
 	/**
 	 * @return the family
 	 */
-	public String getFamily()
+	public String getFilesizeInBytes()
 	{
-		return family;
+		return filesizeInBytes;
 	}
 	/**
 	 * @param family the family to set
 	 */
-	public void setFamily(String family)
+	public void setFilesizeInBytes(String filesizeInBytes)
 	{
-		this.family = family;
+		this.filesizeInBytes = filesizeInBytes;
 	}
 	/**
 	 * @return the isRoot
@@ -69,30 +69,30 @@ public class TableRowData
 	/**
 	 * @return the source
 	 */
-	public String getSource()
+	public String getFilename()
 	{
-		return source;
+		return filename;
 	}
 	/**
 	 * @param source the source to set
 	 */
-	public void setSource(String source)
+	public void setFilename(String filename)
 	{
-		this.source = source;
+		this.filename = filename;
 	}
 	/**
 	 * @return the spouse
 	 */
-	public String getSpouse()
+	public String getStartingClusterNumber()
 	{
-		return spouse;
+		return startingClusterNumber;
 	}
 	/**
 	 * @param spouse the spouse to set
 	 */
-	public void setSpouse(String spouse)
+	public void setStartingClusterNumber(String startingClusterNumber)
 	{
-		this.spouse = spouse;
+		this.startingClusterNumber = startingClusterNumber;
 	}
 	
 }

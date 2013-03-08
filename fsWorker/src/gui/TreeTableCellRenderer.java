@@ -52,7 +52,7 @@ public class TreeTableCellRenderer extends DefaultTreeCellRenderer {
         if(node != null && node.getUserObject() != null && (node.getUserObject() instanceof TableRowData))
         {
         	TableRowData item = (TableRowData)(node.getUserObject());
-        	setText(item.getSource());
+        	setText(item.getFilename());
         	if(item.isRoot())
         	{
         		//setOpenIcon(new ImageIcon("icons/minus.gif"));

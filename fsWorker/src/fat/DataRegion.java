@@ -1,12 +1,13 @@
-import java.util.Arrays;
+package fat;
 
+import java.util.Arrays;
 
 public class DataRegion {
 	private long dataRegionAddress;
 	private long bytesPerCluster;
 	private byte[] buffer;
 	
-	DataRegion(BIOSParameterBlock biosParameterBlock, byte[] buffer)
+	public DataRegion(BIOSParameterBlock biosParameterBlock, byte[] buffer)
 	{	
 		long rootDirectoryAddress = RootDirectory.calculateRootDirectoryAddress(biosParameterBlock);
 		

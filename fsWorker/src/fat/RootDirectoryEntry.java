@@ -1,3 +1,4 @@
+package fat;
 
 public class RootDirectoryEntry {
 	

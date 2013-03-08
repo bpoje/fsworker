@@ -1,3 +1,10 @@
+package main;
+
+import fat.BIOSParameterBlock;
+import fat.DataRegion;
+import fat.FAT12_16;
+import fat.FATType;
+import fat.RootDirectory;
 import gui.MainView;
 
 import java.io.File;
@@ -174,9 +181,9 @@ public class Main {
 					DataRegion dataRegion = new DataRegion(biosParameterBlock, buffer);
 					FAT12_16 fat12_16 = new FAT12_16(biosParameterBlock, buffer);
 					RootDirectory rootDir = new RootDirectory(biosParameterBlock, buffer, dataRegion, fat12_16);
-					rootDir.directory();
+					//rootDir.directory();
 					
-					MainView mainView = new MainView("Title");
+					MainView mainView = new MainView("MainView", rootDir);
 					mainView.setVisible(true);
 					
 					
