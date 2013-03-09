@@ -7,7 +7,7 @@ import org.jdesktop.swingx.treetable.AbstractTreeTableModel;
 
 public class MyTreeModel extends AbstractTreeTableModel
 {
-	private String [] titles = {"Filename","Extension","Starting Cluster Number","File size in Bytes"};
+	private String [] titles = {"Filename","Extension","Starting Cluster Number","File size in Bytes","Total clusters needed for data","Total allocated size in Bytes","File slack size in Bytes","Md5"};
 
 	
 	public MyTreeModel(DefaultMutableTreeNode root)
@@ -48,6 +48,10 @@ public class MyTreeModel extends AbstractTreeTableModel
 				case 1: return data.getFilenameExtension();
 				case 2: return data.getStartingClusterNumber();
 				case 3: return data.getFilesizeInBytes();
+				case 4: return data.getTotalClustersNeededForData();
+				case 5: return data.getTotalAllocatedSizeInBytes();
+				case 6: return data.getFileSlackSizeInBytes();
+				case 7: return data.getMd5();
 				}
 			}
 			
@@ -65,6 +69,10 @@ public class MyTreeModel extends AbstractTreeTableModel
 				case 1: return data.getFilenameExtension();
 				case 2: return data.getStartingClusterNumber();
 				case 3: return data.getFilesizeInBytes();
+				case 4: return data.getTotalClustersNeededForData();
+				case 5: return data.getTotalAllocatedSizeInBytes();
+				case 6: return data.getFileSlackSizeInBytes();
+				case 7: return data.getMd5();
 				}
 			}
 			

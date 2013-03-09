@@ -163,6 +163,13 @@ public class DOSFilename extends RootDirectoryEntry {
 		
 	}
 	
+	public long getTotalClustersNeededForData(DataRegion dataRegion)
+	{
+		long bytesPerCluster = dataRegion.getBytesPerCluster();
+		long clustersNeeded = (long)Math.ceil((float)filesizeInBytes / (float)bytesPerCluster);
+		return clustersNeeded;
+	}
+	
 	public byte[] getData(DataRegion dataRegion, FAT12_16 fat12_16)
 	{
 		if (filesizeInBytes <= 0)
@@ -241,7 +248,7 @@ public class DOSFilename extends RootDirectoryEntry {
 	{
 		byte fileData[] = getData(dataRegion, fat12_16);
 		
-		String md5 = null;
+		String md5 = "";
 		
 		//If not folder
 		if (fileData != null)

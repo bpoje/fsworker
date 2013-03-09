@@ -6,6 +6,10 @@ public class TableRowData
 	private String filenameExtension;
 	private String startingClusterNumber;
 	private String filesizeInBytes;
+	private String totalClustersNeededForData;
+	private String totalAllocatedSizeInBytes;
+	private String fileSlackSizeInBytes;
+	private String md5;
 	private boolean isRoot;
 	/**
 	 * Created on: Feb 23, 2008
@@ -16,12 +20,16 @@ public class TableRowData
 	 * @param family
 	 * @param isRoot
 	 */
-	public TableRowData(String filename, String filenameExtension, String startingClusterNumber, String filesizeInBytes, boolean isLeaf)
+	public TableRowData(String filename, String filenameExtension, String startingClusterNumber, String filesizeInBytes, String totalClustersNeededForData, String totalAllocatedSizeInBytes, String fileSlackSizeInBytes, String md5, boolean isLeaf)
 	{
 		this.filename = filename;
 		this.filenameExtension = filenameExtension;
 		this.startingClusterNumber = startingClusterNumber;
 		this.filesizeInBytes = filesizeInBytes;
+		this.totalClustersNeededForData = totalClustersNeededForData;
+		this.totalAllocatedSizeInBytes = totalAllocatedSizeInBytes;
+		this.fileSlackSizeInBytes = fileSlackSizeInBytes;
+		this.md5 = md5;
 		this.isRoot = isLeaf;
 	}
 	/**
@@ -94,5 +102,28 @@ public class TableRowData
 	{
 		this.startingClusterNumber = startingClusterNumber;
 	}
-	
+	public String getMd5() {
+		return md5;
+	}
+	public void setMd5(String md5) {
+		this.md5 = md5;
+	}
+	public String getTotalClustersNeededForData() {
+		return totalClustersNeededForData;
+	}
+	public void setTotalClustersNeededForData(String totalClustersNeededForData) {
+		this.totalClustersNeededForData = totalClustersNeededForData;
+	}
+	public String getTotalAllocatedSizeInBytes() {
+		return totalAllocatedSizeInBytes;
+	}
+	public void setTotalAllocatedSizeInBytes(String totalAllocatedSizeInBytes) {
+		this.totalAllocatedSizeInBytes = totalAllocatedSizeInBytes;
+	}
+	public String getFileSlackSizeInBytes() {
+		return fileSlackSizeInBytes;
+	}
+	public void setFileSlackSizeInBytes(String fileSlackSizeInBytes) {
+		this.fileSlackSizeInBytes = fileSlackSizeInBytes;
+	}
 }

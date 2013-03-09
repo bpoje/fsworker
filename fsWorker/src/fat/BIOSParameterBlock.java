@@ -25,6 +25,12 @@ public class BIOSParameterBlock {
 	private long BPB_HiddSec;
 	private long BPB_TotSec32;
 	
+	//number of sectors in data region
+	long numberOfDataSectors;
+	
+	//number of clusters in data region
+	private long CountofClustersInDataRegion;
+	
 	private FATType type;
 	
 	//count of sectors occupied by ONE FAT
@@ -101,21 +107,22 @@ public class BIOSParameterBlock {
 		else
 			TotSec = BPB_TotSec32;
 		
-		long DataSec = TotSec - (BPB_RsvdSecCnt + (BPB_NumFATs * FATSz) + RootDirSectors);
-		System.out.println("DataSec: " + DataSec);
+		//the count of sectors in data region
+		numberOfDataSectors = TotSec - (BPB_RsvdSecCnt + (BPB_NumFATs * FATSz) + RootDirSectors);
+		System.out.println("numberOfDataSectors: " + numberOfDataSectors);
 		
-		//determine the count of clusters
-		long CountofClusters = DataSec / BPB_SecPerClus;
-		System.out.println("CountofClusters: " + CountofClusters);
+		//determine the count of clusters in data region
+		CountofClustersInDataRegion = numberOfDataSectors / BPB_SecPerClus;
+		System.out.println("CountofClusters: " + CountofClustersInDataRegion);
 		
 		//Now we can determine the FAT type
-		if(CountofClusters < 4085)
+		if(CountofClustersInDataRegion < 4085)
 		{
 			//Volume is FAT12
 			type = FATType.FAT12;
 			System.out.println("Volume is FAT12");
 		}
-		else if(CountofClusters < 65525)
+		else if(CountofClustersInDataRegion < 65525)
 		{
 			//Volume is FAT16
 			type = FATType.FAT16;
@@ -292,6 +299,12 @@ public class BIOSParameterBlock {
 	public long getFATSz() {
 		return FATSz;
 	}
-	
-	
+
+	public long getCountofClustersInDataRegion() {
+		return CountofClustersInDataRegion;
+	}
+
+	public long getNumberOfDataSectors() {
+		return numberOfDataSectors;
+	}
 }

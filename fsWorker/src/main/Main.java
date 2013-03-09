@@ -183,7 +183,7 @@ public class Main {
 					RootDirectory rootDir = new RootDirectory(biosParameterBlock, buffer, dataRegion, fat12_16);
 					//rootDir.directory();
 					
-					MainView mainView = new MainView("MainView", rootDir, dataRegion, fat12_16);
+					MainView mainView = new MainView("MainView", biosParameterBlock, rootDir, dataRegion, fat12_16);
 					mainView.setVisible(true);
 					
 					
