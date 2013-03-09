@@ -170,6 +170,58 @@ public class DOSFilename extends RootDirectoryEntry {
 		return clustersNeeded;
 	}
 	
+	public void writeToFileSlack(DataRegion dataRegion, FAT12_16 fat12_16, byte [] writeBuffer)
+	{
+		if (filesizeInBytes <= 0)
+			return;
+		
+		long bytesPerCluster = dataRegion.getBytesPerCluster();
+		long totalClustersNeededForData = (long)Math.ceil((float)filesizeInBytes / (float)bytesPerCluster);
+		
+		long totalAllocatedSizeInBytes = totalClustersNeededForData * bytesPerCluster;
+		long fileSlackSizeInBytes = totalAllocatedSizeInBytes - filesizeInBytes;
+		
+		if (writeBuffer.length != fileSlackSizeInBytes)
+		{
+			System.out.println("Length not equal!");
+			return;
+		}
+		
+		char lastFATPointerValue = fat12_16.getLastFATPointerValue(startingClusterNumber);
+		
+		long dataClusterAddress = dataRegion.getClusterAddress(lastFATPointerValue);
+		
+		System.out.println("dataClusterAddress: " + dataClusterAddress);
+		System.out.printf("dataClusterAddress: 0x%02Xh\n", dataClusterAddress);
+		
+		byte cluster[] = dataRegion.getClusterData(dataClusterAddress);
+		
+		//System.out.println("abc");
+		//for (int i = 0; i < cluster.length; i++)
+		//{
+		//	System.out.printf("0x%02Xh, ", cluster[i]);
+		//}
+		//System.out.println();
+		int firstEmptyLocation = (int)(cluster.length - fileSlackSizeInBytes);
+		
+		System.out.println("firstEmptyLocation" + firstEmptyLocation);
+		System.out.printf("firstEmptyLocation: 0x%02Xh\n", firstEmptyLocation);
+		
+		
+		//TODO
+		//1. write to file slack to physical file
+		//2. implement a method that calculates file slack size for a file (you need it to determine writeBuffer length)
+		//3. replace fileSlackSize calculations with 2 in scanFileSystem() and here
+		
+		try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e) {
+			//Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
 	public byte[] getData(DataRegion dataRegion, FAT12_16 fat12_16)
 	{
 		if (filesizeInBytes <= 0)

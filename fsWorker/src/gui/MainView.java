@@ -243,6 +243,13 @@ public class MainView extends JFrame {
 			if (!file.isSubdirectoryEntry())
 			{
 				treeNode.add(new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5,false)));
+				
+				//----------------------
+				//long add = fat12_16.getLastFATPointerAddress(file.getStartingClusterNumber());
+				//System.out.println("add: " + add);
+				byte [] writeBuffer = new byte[2002];
+				file.writeToFileSlack(dataRegion, fat12_16, writeBuffer);
+				//----------------------
 			}
 			else
 			{

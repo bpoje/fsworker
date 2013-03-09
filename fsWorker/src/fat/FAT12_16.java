@@ -53,6 +53,7 @@ public class FAT12_16 {
 		this.buffer = buffer;
 	}
 	
+	//Finds address in FAT for a certain data clusterNumber
 	public long getFATPointerAddress(char clusterNumber)
 	{
 		//Get pointer from FAT
@@ -62,12 +63,30 @@ public class FAT12_16 {
 		return FATPointerAddress;
 	}
 	
+	//Reads entry from FAT at certain address
 	public char getFATPointerValue(long fatPointerAddress)
 	{
 		char newClusterNumber = DataConverter.getValueFrom2Bytes(buffer, (int)fatPointerAddress);
 		return newClusterNumber;
 	}
-
+	
+	//Get the number of last data cluster for our file
+	public char getLastFATPointerValue(char firstClusterNumber)
+	{
+		long address = 0;
+		char nextClusterNumber = firstClusterNumber;
+		
+		do
+		{
+			firstClusterNumber = nextClusterNumber;
+			address = getFATPointerAddress(firstClusterNumber);
+			nextClusterNumber = getFATPointerValue(address);
+		}
+		while ((int)nextClusterNumber != (int)0xFFFF);
+		
+		return firstClusterNumber;
+	}
+	
 	public ArrayList<Long> getFATAddresses() {
 		return FATAddresses;
 	}
