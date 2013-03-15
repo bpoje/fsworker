@@ -28,7 +28,7 @@ public class BootBlock16 extends BootBlock {
 	public BootBlock16(FileSystemIO fileSystemIO) throws IOException,
 			NotEnoughBytesReadException {
 		super(fileSystemIO);
-
+		
 		//byte buffer[] = null;
 		
 		//Za FAT16 ze mamo vsa potrebna polja

@@ -20,11 +20,11 @@ public class FileSystemFat16 extends FileSystemFat{
 	
 	public FileSystemFat16(String filenameFSImage, FileSystemIO fileSystemIO) throws IllegalArgumentException, IOException, NotEnoughBytesReadException
 	{		
-		super(filenameFSImage, fileSystemIO, new FileAllocationTable16(fileSystemIO), new BootBlock16(fileSystemIO), new Fat16Directory(), new DataRegion16());
+		super(filenameFSImage, fileSystemIO, new FileAllocationTable16(fileSystemIO), new BootBlock16(fileSystemIO), new Fat16Directory(), new DataRegion16(fileSystemIO));
 		
 		fileAllocationTable.initFileAllocationTable(bootBlock);
-		fatDirectory.initFatDirectory(bootBlock, fileAllocationTable);
-		dataRegion.initDataRegion(fileSystemIO, bootBlock);
+		dataRegion.initDataRegion(bootBlock);
+		fatDirectory.initFatDirectory(bootBlock, fileAllocationTable, dataRegion);
 	}
 
 	@Override public void ls()
