@@ -1,11 +1,15 @@
 package filesystem.fat.fat16;
 
+import java.io.IOException;
+
 import hash.Hash;
 import fat.DataConverter;
-import fat.DataRegion;
-import fat.FAT12_16;
+import filesystem.exception.NotEnoughBytesReadException;
+import filesystem.fat.DataRegion;
+import filesystem.fat.fat16.FileAllocationTable16;
 import fat.FilenameStatus;
 import filesystem.fat.FatEntry;
+import filesystem.io.FileSystemIO;
 
 public class Fat16Entry extends FatEntry {
 	private String filename;
@@ -20,8 +24,8 @@ public class Fat16Entry extends FatEntry {
 	 * isArchiveFlag;
 	 */
 
-	public Fat16Entry(char entryNumber, long entryAddress, byte buffer[]) {
-		super(entryNumber, entryAddress, buffer);
+	public Fat16Entry(char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
+		super(entryNumber, entryAddress, fileSystemIO);
 
 		/*
 		 * long entryAddress = (long)rootDirAddress + (long)entryNumber *
@@ -68,8 +72,11 @@ public class Fat16Entry extends FatEntry {
 		// Get filename
 		// If a filename is fewer than eight characters in length, it is padded
 		// with space characters.
+		//filename = DataConverter
+		//		.getStringFrom8Bytes(buffer, (int) entryAddress);
+		byte buffer[] = fileSystemIO.readFSImage(entryAddress, (int)rootDirectoryEntrySize);
 		filename = DataConverter
-				.getStringFrom8Bytes(buffer, (int) entryAddress);
+						.getStringFrom8Bytes(buffer, 0);
 
 		// Remove padding
 		int numberOfAdditionalSpaces = 0;
@@ -86,8 +93,10 @@ public class Fat16Entry extends FatEntry {
 
 		// If the filename extension is fewer than three characters in length,
 		// it is padded with space characters.
+		//filenameExtension = DataConverter.getStringFrom3Bytes(buffer,
+		//		(int) entryAddress + 8);
 		filenameExtension = DataConverter.getStringFrom3Bytes(buffer,
-				(int) entryAddress + 8);
+						(int) 8);
 
 		// Remove padding
 		numberOfAdditionalSpaces = 0;
@@ -153,8 +162,10 @@ public class Fat16Entry extends FatEntry {
 		 */
 
 		// Starting cluster number for file
+		//startingClusterNumber = DataConverter.getValueFrom2Bytes(buffer,
+		//		(int) entryAddress + 26);
 		startingClusterNumber = DataConverter.getValueFrom2Bytes(buffer,
-				(int) entryAddress + 26);
+						(int) 26);
 
 		System.out.println("startingClusterNumber: "
 				+ (int) startingClusterNumber);
@@ -162,26 +173,28 @@ public class Fat16Entry extends FatEntry {
 				(int) startingClusterNumber);
 
 		// File size in bytes
+		//filesizeInBytes = DataConverter.getValueFrom4Bytes(buffer,
+		//		(int) entryAddress + 28);
 		filesizeInBytes = DataConverter.getValueFrom4Bytes(buffer,
-				(int) entryAddress + 28);
+						(int) 28);
 
 		System.out.println("filesizeInBytes: " + filesizeInBytes);
 
 	}
 
-	public long getTotalClustersNeededForData(DataRegion dataRegion) {
-		long bytesPerCluster = dataRegion.getBytesPerCluster();
+	public long getTotalClustersNeededForData(DataRegion16 dataRegion16) {
+		long bytesPerCluster = dataRegion16.getBytesPerCluster();
 		long clustersNeeded = (long) Math.ceil((float) filesizeInBytes
 				/ (float) bytesPerCluster);
 		return clustersNeeded;
 	}
 
-	public void writeToFileSlack(DataRegion dataRegion, FAT12_16 fat12_16,
-			byte[] writeBuffer) {
+	public void writeToFileSlack(DataRegion16 dataRegion16, FileAllocationTable16 fileAllocationTable16,
+			byte[] writeBuffer) throws IOException, NotEnoughBytesReadException {
 		if (filesizeInBytes <= 0)
 			return;
 
-		long bytesPerCluster = dataRegion.getBytesPerCluster();
+		long bytesPerCluster = dataRegion16.getBytesPerCluster();
 		long totalClustersNeededForData = (long) Math
 				.ceil((float) filesizeInBytes / (float) bytesPerCluster);
 
@@ -194,16 +207,16 @@ public class Fat16Entry extends FatEntry {
 			return;
 		}
 
-		char lastFATPointerValue = fat12_16
+		char lastFATPointerValue = fileAllocationTable16
 				.getLastFATPointerValue(startingClusterNumber);
 
-		long dataClusterAddress = dataRegion
+		long dataClusterAddress = dataRegion16
 				.getClusterAddress(lastFATPointerValue);
 
 		System.out.println("dataClusterAddress: " + dataClusterAddress);
 		System.out.printf("dataClusterAddress: 0x%02Xh\n", dataClusterAddress);
 
-		byte cluster[] = dataRegion.getClusterData(dataClusterAddress);
+		byte cluster[] = dataRegion16.getClusterData(dataClusterAddress);
 
 		// System.out.println("abc");
 		// for (int i = 0; i < cluster.length; i++)
@@ -232,19 +245,19 @@ public class Fat16Entry extends FatEntry {
 
 	}
 
-	public byte[] getData(DataRegion dataRegion, FAT12_16 fat12_16) {
+	public byte[] getData(DataRegion16 dataRegion16, FileAllocationTable16 fileAllocationTable16) throws IOException, NotEnoughBytesReadException {
 		if (filesizeInBytes <= 0)
 			return null;
-
+		
 		char clusterNumber = startingClusterNumber;
 		System.out.println("\t\t\tclusterNumber: " + (int) clusterNumber);
-
-		long bytesPerCluster = dataRegion.getBytesPerCluster();
-
+		
+		long bytesPerCluster = dataRegion16.getBytesPerCluster();
+		
 		// long remainingDataBytes = filesizeInBytes;
 		long clustersNeeded = (long) Math.ceil((float) filesizeInBytes
 				/ (float) bytesPerCluster);
-
+		
 		System.out.println("filesizeInBytes: " + filesizeInBytes);
 		System.out.println("bytesPerCluster: " + bytesPerCluster);
 		System.out.println("clustersNeeded: " + clustersNeeded);
@@ -255,12 +268,12 @@ public class Fat16Entry extends FatEntry {
 
 		// while (remainingDataBytes > 0)
 		while ((int) clusterNumber != (int) 0xFFFF) {
-			long address = dataRegion.getClusterAddress(clusterNumber);
+			long address = dataRegion16.getClusterAddress(clusterNumber);
 
 			System.out.println("address: " + address);
 			System.out.printf("address: 0x%02Xh\n", address);
 
-			byte cluster[] = dataRegion.getClusterData(address);
+			byte cluster[] = dataRegion16.getClusterData(address);
 
 			// remainingDataBytes -= bytesPerCluster;
 
@@ -276,14 +289,14 @@ public class Fat16Entry extends FatEntry {
 			clusterCounter++;
 
 			// Get pointer from FAT
-			long fatPointerAddress = fat12_16
+			long fatPointerAddress = fileAllocationTable16
 					.getFATPointerAddress(clusterNumber);
 
 			System.out.println("fatPointerAddress: " + (int) fatPointerAddress);
 			System.out.printf("fatPointerAddress: 0x%02Xh\n",
 					(int) fatPointerAddress);
 
-			clusterNumber = fat12_16.getFATPointerValue(fatPointerAddress);
+			clusterNumber = fileAllocationTable16.getFATPointerValue(fatPointerAddress);
 
 			System.out.println("clusterNumber: " + (int) clusterNumber);
 			System.out.printf("clusterNumber: 0x%02Xh\n", (int) clusterNumber);
@@ -304,8 +317,8 @@ public class Fat16Entry extends FatEntry {
 		return fileData;
 	}
 
-	public String calculateMd5(DataRegion dataRegion, FAT12_16 fat12_16) {
-		byte fileData[] = getData(dataRegion, fat12_16);
+	public String calculateMd5(DataRegion16 dataRegion16, FileAllocationTable16 fileAllocationTable16) throws IOException, NotEnoughBytesReadException {
+		byte fileData[] = getData(dataRegion16, fileAllocationTable16);
 
 		String md5 = "";
 

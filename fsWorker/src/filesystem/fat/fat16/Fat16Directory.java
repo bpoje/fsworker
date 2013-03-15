@@ -1,28 +1,46 @@
 package filesystem.fat.fat16;
 
+import hash.Hash;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+import filesystem.exception.NotEnoughBytesReadException;
+import filesystem.fat.fat16.Fat16Entry;
+import fat.FilenameStatus;
 import fat.RootDirectoryEntry;
+import filesystem.fat.fat16.Fat16EntryLongFileName;
+import filesystem.fat.FatDirectory;
+import filesystem.io.FileSystemIO;
 import filesystem.fat.BootBlock;
 import filesystem.fat.DataRegion;
-import filesystem.fat.FatDirectory;
+import filesystem.fat.FatEntry;
 import filesystem.fat.FileAllocationTable;
 
 public class Fat16Directory extends FatDirectory {
-	private long rootDirectoryAddress = 0;
-	private char maxEntriesInRootDirectory = 0;
+	protected BootBlock bootBlock;
+	protected FileAllocationTable fileAllocationTable;
+	protected DataRegion dataRegion;
 	
-	private long rootDirectorySizeInBytes = 0;
-	private long rootDirectorySizeInBlocks = 0;
+	protected long rootDirectoryAddress = 0;
+	protected char maxEntriesInRootDirectory = 0;
+	
+	protected long rootDirectorySizeInBytes = 0;
+	protected long rootDirectorySizeInBlocks = 0;
 
-	public Fat16Directory()
+	public Fat16Directory(FileSystemIO fileSystemIO)
 	{
-		super();
+		super(fileSystemIO);
+		System.out.println("ccc fileSystemIO:" + fileSystemIO);
 	}
 	
 	@Override
 	public void initFatDirectory(BootBlock bootBlock,
 			FileAllocationTable fileAllocationTable, DataRegion dataRegion) {
 
-		
+		this.bootBlock = bootBlock;
+		this.fileAllocationTable = fileAllocationTable;
+		this.dataRegion = dataRegion;
 		
 		BootBlock16 bootBlock16 = (BootBlock16)bootBlock;
 
@@ -84,7 +102,88 @@ public class Fat16Directory extends FatDirectory {
 		 */
 
 	}
-
+	
+	public ArrayList<FatEntry> directory() throws IOException, NotEnoughBytesReadException
+	{
+		//ArrayList<RootDirectoryEntry> arrayListFiles = new ArrayList<RootDirectoryEntry>();
+		ArrayList<FatEntry> arrayListFiles = new ArrayList<FatEntry>();
+		
+		for (int entryNumber = 0; entryNumber < (int)maxEntriesInRootDirectory; entryNumber++)
+		{
+			long entryAddress = calculateRootDirectoryEntryAddress((char)entryNumber);
+			
+			FatEntry entry = new FatEntry((char) entryNumber, entryAddress, fileSystemIO);
+			
+			FilenameStatus filenameStatus = entry.getFilenameStatus();
+			//Break for loop if end-of-list
+			if (filenameStatus == FilenameStatus.entryIsAvailableAndNoSubsequentEntryIsInUse)
+				break;
+			
+			System.out.println("\t entryNumber = : " + entryNumber);
+			System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
+			
+			System.out.println("entry.isLongFilenameEntry(): " + entry.isLongFilenameEntry());
+			System.out.println("entry.getFilenameStatus(): " + entry.getFilenameStatus());
+			
+			
+			
+			if (entry.isLongFilenameEntry())
+			{
+				System.out.println("c1d1");
+				
+				Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName((char)entryNumber, entryAddress, fileSystemIO);
+				System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
+			}
+			else
+			{				
+				Fat16Entry dosFilename = new Fat16Entry((char)entryNumber, entryAddress, fileSystemIO);
+				
+				boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
+				
+				arrayListFiles.add(dosFilename);
+				
+				//if (isSubdirectory)
+				//{
+				//	System.out.println("isSubdirectory: " + isSubdirectory);
+				//	long adr = dataRegion.getClusterAddress(dosFilename.getStartingClusterNumber());
+				//	
+				//	System.out.println("adr: " + adr);
+				//	System.out.printf("adr: 0x%02Xh\n", adr);
+				//	
+				//	byte temp[] = dataRegion.getClusterData(adr);
+				//	for (int i = 0; i < temp.length; i++)
+				//	{
+				//		System.out.printf("0x%02Xh ", temp[i]);
+				//	}
+				//	System.out.println();
+				//	
+				//	System.out.println("---------------------------------------------------------");
+				//	subDirectory(adr);
+				//	System.out.println("---------------------------------------------------------");
+				//}
+				
+				
+				/*
+				byte fileData[] = dosFilename.getData((DataRegion16)dataRegion, (FileAllocationTable16)fileAllocationTable);
+				
+				//If not folder
+				if (fileData != null)
+				{
+					System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
+					System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
+					
+					String md5 = Hash.getMd5FromFileData(fileData);
+					System.out.println("MD5 digest(in hex format):: " + md5);
+				}
+				*/
+			}
+			
+		}
+		
+		return arrayListFiles;
+	}
+	
+	
 	public static long calculateRootDirectoryAddress(
 			BootBlock16 bootBlock16) {
 		// BB
@@ -134,7 +233,7 @@ public class Fat16Directory extends FatDirectory {
 	public static long calculateRootDirectorySizeInBytes(BootBlock16 bootBlock16)
 	{
 		char myMaxEntriesInRootDirectory = bootBlock16.getBPB_RootEntCnt();
-		long myRootDirectorySizeInBytes = (long)myMaxEntriesInRootDirectory * RootDirectoryEntry.rootDirectoryEntrySize;
+		long myRootDirectorySizeInBytes = (long)myMaxEntriesInRootDirectory * Fat16Entry.rootDirectoryEntrySize;
 		return myRootDirectorySizeInBytes;
 	}
 	
@@ -147,7 +246,24 @@ public class Fat16Directory extends FatDirectory {
 		return myRootDirectorySizeInBlocks;
 	}
 
-	
-
-	
+	//public long calculateRootDirectoryEntryAddress(char entryNumber, byte buffer[])
+		public long calculateRootDirectoryEntryAddress(char entryNumber)
+		{
+			long entryAddress = (long)rootDirectoryAddress + (long)entryNumber * RootDirectoryEntry.rootDirectoryEntrySize;
+			
+			//System.out.println("entryAddress: " + entryAddress);
+			//System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
+			
+			return entryAddress;
+		}
+		
+		public long calculateSubDirectoryEntryAddress(long address, char entryNumber)
+		{
+			long entryAddress = (long)address + (long)entryNumber * RootDirectoryEntry.rootDirectoryEntrySize;
+			
+			//System.out.println("entryAddress: " + entryAddress);
+			//System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
+			
+			return entryAddress;
+		}
 }

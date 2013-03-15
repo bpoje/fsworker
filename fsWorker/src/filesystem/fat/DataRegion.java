@@ -7,7 +7,7 @@ public abstract class DataRegion {
 	
 	public DataRegion(FileSystemIO fileSystemIO)
 	{
-		
+		this.fileSystemIO = fileSystemIO;
 	}
 	
 	abstract public void initDataRegion(BootBlock bootBlock);

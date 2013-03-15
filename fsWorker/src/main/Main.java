@@ -42,6 +42,8 @@ public class Main {
 			//byte [] temp = fileSystemFAT16.readFSImage(10, 4);
 			
 			//OutputFormater.printArrayHex(temp, "Temp:");
+			
+			fileSystemFAT16.ls();
 		}
 		catch (Exception e)
 		{

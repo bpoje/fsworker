@@ -1,10 +1,14 @@
 package filesystem.fat;
 
+import java.io.IOException;
+
 import fat.DataConverter;
 import fat.FilenameStatus;
 import filesystem.FileSystemEntry;
+import filesystem.exception.NotEnoughBytesReadException;
+import filesystem.io.FileSystemIO;
 
-public abstract class FatEntry extends FileSystemEntry {
+public class FatEntry extends FileSystemEntry {
 	protected char entryNumber;
 	protected long entryAddress;
 
@@ -15,6 +19,8 @@ public abstract class FatEntry extends FileSystemEntry {
 	protected boolean isSubdirectoryEntry;
 	protected boolean isArchiveFlag;
 	protected boolean isLongFilenameEntry;
+	
+	protected FileSystemIO fileSystemIO;
 
 	// Check first byte of filename
 	// (The first byte of the filename indicates its status. Usually, it
@@ -24,22 +30,33 @@ public abstract class FatEntry extends FileSystemEntry {
 
 	public static final long rootDirectoryEntrySize = 32; // bytes
 
-	public FatEntry(char entryNumber, long entryAddress, byte buffer[]) {
+	public FatEntry(char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
+		System.out.println("y0: fileSystemIO: " + fileSystemIO);
+		
 		this.entryNumber = entryNumber;
 		this.entryAddress = entryAddress;
-
-		getAttributes(buffer);
-		getFilenameStatus(buffer);
+		this.fileSystemIO = fileSystemIO;
+		
+		System.out.println("y1: fileSystemIO: " + fileSystemIO);
+		
+		decodeAttributes();
+		
+		System.out.println("y2:");
+		
+		decodeFilenameStatus();
 
 	}
 
-	public void getFilenameStatus(byte buffer[]) {
+	public void decodeFilenameStatus() throws IOException, NotEnoughBytesReadException {
 		// Check first byte of filename
 		// (The first byte of the filename indicates its status. Usually, it
 		// contains a normal filename
 		// character (e.g. 'A'), but there are some special values)
-		byte filenameStatusByte = buffer[(int) entryAddress];
-
+		
+		//byte filenameStatusByte = buffer[(int) entryAddress];
+		byte buffer[] = fileSystemIO.readFSImage(entryAddress, 1);
+		byte filenameStatusByte = buffer[0];
+		
 		System.out.println("filenameStatusByte: " + filenameStatusByte);
 		System.out.printf("filenameStatusByte: 0x%02Xh\n", filenameStatusByte);
 
@@ -78,14 +95,20 @@ public abstract class FatEntry extends FileSystemEntry {
 		}
 	}
 
-	public void getAttributes(byte buffer[]) {
+	public void decodeAttributes() throws IOException, NotEnoughBytesReadException {
 		// System.out.println("entryAddress: " + entryAddress);
 		// System.out.printf("entryAddress: 0x%02Xh\n", entryAddress);
 
+		System.out.println("c1: entryAddress: " + entryAddress);
+		
 		// File atributes
-		char fileAttributes = DataConverter.getValueFrom1Byte(buffer,
-				(int) entryAddress + 11);
+		//char fileAttributes = DataConverter.getValueFrom1Byte(buffer,
+		//		(int) entryAddress + 11);
+		byte buffer[] = fileSystemIO.readFSImage(entryAddress + 11, 1);
+		char fileAttributes = DataConverter.getValueFrom1Byte(buffer,0);
 
+		System.out.println("c2:");
+		
 		// System.out.println("fileAttributes: " + (int)fileAttributes);
 		// System.out.printf("fileAttributes: 0x%02Xh\n", (int)fileAttributes);
 
@@ -128,5 +151,53 @@ public abstract class FatEntry extends FileSystemEntry {
 		 * System.out.println("isLongFilenameEntry: " + isLongFilenameEntry);
 		 * System.out.println();
 		 */
+	}
+
+	public char getEntryNumber() {
+		return entryNumber;
+	}
+
+	public long getEntryAddress() {
+		return entryAddress;
+	}
+
+	public boolean isReadOnlyFile() {
+		return isReadOnlyFile;
+	}
+
+	public boolean isHiddenFile() {
+		return isHiddenFile;
+	}
+
+	public boolean isSystemFile() {
+		return isSystemFile;
+	}
+
+	public boolean isSpecialEntry() {
+		return isSpecialEntry;
+	}
+
+	public boolean isSubdirectoryEntry() {
+		return isSubdirectoryEntry;
+	}
+
+	public boolean isArchiveFlag() {
+		return isArchiveFlag;
+	}
+
+	public boolean isLongFilenameEntry() {
+		return isLongFilenameEntry;
+	}
+
+	public FileSystemIO getFileSystemIO() {
+		return fileSystemIO;
+	}
+
+	public static long getRootdirectoryentrysize() {
+		return rootDirectoryEntrySize;
+	}
+
+	public FilenameStatus getFilenameStatus() {
+		return filenameStatus;
 	}
 }

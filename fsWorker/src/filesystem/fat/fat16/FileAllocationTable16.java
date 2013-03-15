@@ -3,7 +3,6 @@ package filesystem.fat.fat16;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import fat.BIOSParameterBlock;
 import fat.DataConverter;
 import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.BootBlock;

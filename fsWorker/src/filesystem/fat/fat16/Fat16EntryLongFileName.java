@@ -1,21 +1,27 @@
 package filesystem.fat.fat16;
 
+import java.io.IOException;
+
 import fat.DataConverter;
+import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.FatEntry;
+import filesystem.io.FileSystemIO;
 
 public class Fat16EntryLongFileName extends FatEntry {
 	private boolean isLast;
 	private char LFNNumber;
 
 	public Fat16EntryLongFileName(char entryNumber, long entryAddress,
-			byte buffer[]) {
-		super(entryNumber, entryAddress, buffer);
+			FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
+		super(entryNumber, entryAddress, fileSystemIO);
 
-		readLFNNumber(buffer);
+		readLFNNumber();
 	}
 
-	public void readLFNNumber(byte buffer[]) {
-		byte ordinalField = buffer[(int) entryAddress + 0];
+	public void readLFNNumber() throws IOException, NotEnoughBytesReadException {
+		//byte ordinalField = buffer[(int) entryAddress + 0];
+		byte buffer[] = fileSystemIO.readFSImage(entryAddress + 0, 1);
+		byte ordinalField = buffer[0];
 
 		System.out.println("ordinalField = : " + ordinalField);
 		System.out.printf("ordinalField: 0x%02Xh\n", ordinalField);

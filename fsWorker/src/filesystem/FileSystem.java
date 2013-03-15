@@ -19,5 +19,5 @@ public abstract class FileSystem {
 		this.fileSystemIO = fileSystemIO;
 	}
 	
-	public abstract void ls();
+	public abstract void ls() throws IOException, NotEnoughBytesReadException;
 }

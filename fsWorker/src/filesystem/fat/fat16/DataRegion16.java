@@ -58,4 +58,16 @@ public class DataRegion16 extends DataRegion {
 		System.out.printf("from address: 0x%02Xh to including address: 0x%02Xh\n", (int)address, (int)address + (int)bytesPerCluster - 1);
 		return cluster;
 	}
+
+	public BootBlock getBootBlock() {
+		return bootBlock;
+	}
+
+	public long getDataRegionAddress() {
+		return dataRegionAddress;
+	}
+
+	public long getBytesPerCluster() {
+		return bytesPerCluster;
+	}
 }

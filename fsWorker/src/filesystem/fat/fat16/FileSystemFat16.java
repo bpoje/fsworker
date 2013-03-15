@@ -1,36 +1,33 @@
 package filesystem.fat.fat16;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-
-import fat.DOSFilename;
 import fat.RootDirectoryEntry;
-import filesystem.FileSystem;
 import filesystem.exception.NotEnoughBytesReadException;
-import filesystem.fat.FatDirectory;
-import filesystem.fat.FileAllocationTable;
+import filesystem.fat.FatEntry;
 import filesystem.fat.FileSystemFat;
 import filesystem.io.FileSystemIO;
-import gui.TableRowData;
 
 public class FileSystemFat16 extends FileSystemFat{
 	
 	public FileSystemFat16(String filenameFSImage, FileSystemIO fileSystemIO) throws IllegalArgumentException, IOException, NotEnoughBytesReadException
 	{		
-		super(filenameFSImage, fileSystemIO, new FileAllocationTable16(fileSystemIO), new BootBlock16(fileSystemIO), new Fat16Directory(), new DataRegion16(fileSystemIO));
+		super(filenameFSImage, fileSystemIO, new FileAllocationTable16(fileSystemIO), new BootBlock16(fileSystemIO), new Fat16Directory(fileSystemIO), new DataRegion16(fileSystemIO));
 		
 		fileAllocationTable.initFileAllocationTable(bootBlock);
 		dataRegion.initDataRegion(bootBlock);
 		fatDirectory.initFatDirectory(bootBlock, fileAllocationTable, dataRegion);
+		
+		System.out.println("x123y:" + fatDirectory.getFileSystemIO());
 	}
 
-	@Override public void ls()
+	@Override public void ls() throws IOException, NotEnoughBytesReadException
 	{
 		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
+		Fat16Directory fat16Directory = (Fat16Directory)fatDirectory;
 		
+		ArrayList<FatEntry> filesInFolder = fat16Directory.directory();
 	}
 	
 	/*
