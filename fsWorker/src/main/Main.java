@@ -5,6 +5,10 @@ import fat.DataRegion;
 import fat.FAT12_16;
 import fat.FATType;
 import fat.RootDirectory;
+import filesystem.FileSystemType;
+import filesystem.fat.FileSystemFat;
+import filesystem.fat.fat16.FileSystemFat16;
+import filesystem.utils.OutputFormater;
 import gui.MainView;
 
 import java.io.File;
@@ -20,6 +24,26 @@ public class Main {
 			System.out.println("Usage: FileWithPartition");
 			return;
 		}
+		
+		//------------
+		try
+		{
+			FileSystemType type = FileSystemFat.getFatType("partition");
+			System.out.println("Volume type: " + type);
+			
+			FileSystemFat16 fileSystemFAT16 = new FileSystemFat16("partition");
+			byte [] temp = fileSystemFAT16.readFSImage(10, 4);
+			
+			OutputFormater.printArrayHex(temp, "Temp:");
+		}
+		catch (Exception e)
+		{
+			System.out.println(e);
+		}
+		//------------
+		
+		if (true)
+			return;
 		
 		try
 		{
