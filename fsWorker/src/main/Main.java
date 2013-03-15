@@ -8,6 +8,7 @@ import fat.RootDirectory;
 import filesystem.FileSystemType;
 import filesystem.fat.FileSystemFat;
 import filesystem.fat.fat16.FileSystemFat16;
+import filesystem.io.FileSystemIO;
 import filesystem.utils.OutputFormater;
 import gui.MainView;
 
@@ -28,13 +29,19 @@ public class Main {
 		//------------
 		try
 		{
-			FileSystemType type = FileSystemFat.getFatType("partition");
-			System.out.println("Volume type: " + type);
+			String file = "partition";
 			
-			FileSystemFat16 fileSystemFAT16 = new FileSystemFat16("partition");
-			byte [] temp = fileSystemFAT16.readFSImage(10, 4);
+			FileSystemType type = FileSystemFat.getFatType(file);
+			//System.out.println("Volume type: " + type);
 			
-			OutputFormater.printArrayHex(temp, "Temp:");
+			FileSystemIO fileSystemIO = new FileSystemIO(file);
+			
+			//FileSystemFat16 fileSystemFAT16 = new FileSystemFat16(file);
+			FileSystemFat16 fileSystemFAT16 = new FileSystemFat16(file, fileSystemIO);
+			
+			//byte [] temp = fileSystemFAT16.readFSImage(10, 4);
+			
+			//OutputFormater.printArrayHex(temp, "Temp:");
 		}
 		catch (Exception e)
 		{

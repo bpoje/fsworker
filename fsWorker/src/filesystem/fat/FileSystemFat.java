@@ -7,14 +7,16 @@ import java.io.RandomAccessFile;
 import fat.DataConverter;
 import filesystem.FileSystem;
 import filesystem.FileSystemType;
+import filesystem.io.FileSystemIO;
 
 public abstract class FileSystemFat extends FileSystem {
-	private BootBlock bootBlock;
-	private FileAllocationTable fileAllocationTable;
+	protected BootBlock bootBlock;
+	protected FileAllocationTable fileAllocationTable;
 	
-	public FileSystemFat(String filenameFSImage, FileAllocationTable fileAllocationTable, BootBlock bootBlock) throws IllegalArgumentException, IOException
+	public FileSystemFat(String filenameFSImage, FileSystemIO fileSystemIO, FileAllocationTable fileAllocationTable, BootBlock bootBlock) throws IllegalArgumentException, IOException
 	{
-		super(filenameFSImage, getFatType(filenameFSImage));
+		//super(filenameFSImage, getFatType(filenameFSImage));
+		super(getFatType(filenameFSImage), fileSystemIO);
 		
 		this.fileAllocationTable = fileAllocationTable;
 		this.bootBlock = bootBlock;
