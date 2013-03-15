@@ -1,9 +1,11 @@
 package filesystem.fat.fat16;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import fat.BIOSParameterBlock;
 import fat.DataConverter;
+import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.BootBlock;
 import filesystem.fat.FileAllocationTable;
 import filesystem.io.FileSystemIO;
@@ -13,12 +15,11 @@ public class FileAllocationTable16 extends FileAllocationTable {
 	protected ArrayList<Long> FATAddresses = new ArrayList<Long>();
 	protected long sizeOfOneFAT;
 	protected char numberOfFATs;
-	private byte[] buffer;
-
+	
 	public FileAllocationTable16(FileSystemIO fileSystemIO) {
 		super(fileSystemIO);
 	}
-
+	
 	@Override
 	public void initFileAllocationTable(BootBlock bootBlock) {
 
@@ -67,7 +68,7 @@ public class FileAllocationTable16 extends FileAllocationTable {
 					FATAddresses.get(i));
 		}
 	}
-
+	
 	// Finds address in FAT for a certain data clusterNumber
 	public long getFATPointerAddress(char clusterNumber) {
 		// Get pointer from FAT
@@ -78,16 +79,20 @@ public class FileAllocationTable16 extends FileAllocationTable {
 
 		return FATPointerAddress;
 	}
-
+	
 	// Reads entry from FAT at certain address
-	public char getFATPointerValue(long fatPointerAddress) {
-		char newClusterNumber = DataConverter.getValueFrom2Bytes(buffer,
-				(int) fatPointerAddress);
+	public char getFATPointerValue(long fatPointerAddress) throws IOException, NotEnoughBytesReadException {
+		//char newClusterNumber = DataConverter.getValueFrom2Bytes(buffer,
+		//		(int) fatPointerAddress);
+		
+		byte buffer[] = fileSystemIO.readFSImage(fatPointerAddress, 2);
+		char newClusterNumber = DataConverter.getValueFrom2Bytes(buffer,0);
+		
 		return newClusterNumber;
 	}
-
+	
 	// Get the number of last data cluster for our file
-	public char getLastFATPointerValue(char firstClusterNumber) {
+	public char getLastFATPointerValue(char firstClusterNumber) throws IOException, NotEnoughBytesReadException {
 		long address = 0;
 		char nextClusterNumber = firstClusterNumber;
 

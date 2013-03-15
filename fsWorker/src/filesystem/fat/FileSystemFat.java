@@ -12,14 +12,18 @@ import filesystem.io.FileSystemIO;
 public abstract class FileSystemFat extends FileSystem {
 	protected BootBlock bootBlock;
 	protected FileAllocationTable fileAllocationTable;
+	protected FatDirectory fatDirectory;
+	protected DataRegion dataRegion;
 	
-	public FileSystemFat(String filenameFSImage, FileSystemIO fileSystemIO, FileAllocationTable fileAllocationTable, BootBlock bootBlock) throws IllegalArgumentException, IOException
+	public FileSystemFat(String filenameFSImage, FileSystemIO fileSystemIO, FileAllocationTable fileAllocationTable, BootBlock bootBlock, FatDirectory fatDirectory, DataRegion dataRegion) throws IllegalArgumentException, IOException
 	{
 		//super(filenameFSImage, getFatType(filenameFSImage));
 		super(getFatType(filenameFSImage), fileSystemIO);
 		
 		this.fileAllocationTable = fileAllocationTable;
 		this.bootBlock = bootBlock;
+		this.fatDirectory = fatDirectory;
+		this.dataRegion = dataRegion;
 	}
 	
 	public static FileSystemType getFatType(String filename) throws IOException {

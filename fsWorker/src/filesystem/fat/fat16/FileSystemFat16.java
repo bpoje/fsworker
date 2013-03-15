@@ -10,6 +10,7 @@ import fat.DOSFilename;
 import fat.RootDirectoryEntry;
 import filesystem.FileSystem;
 import filesystem.exception.NotEnoughBytesReadException;
+import filesystem.fat.FatDirectory;
 import filesystem.fat.FileAllocationTable;
 import filesystem.fat.FileSystemFat;
 import filesystem.io.FileSystemIO;
@@ -19,9 +20,11 @@ public class FileSystemFat16 extends FileSystemFat{
 	
 	public FileSystemFat16(String filenameFSImage, FileSystemIO fileSystemIO) throws IllegalArgumentException, IOException, NotEnoughBytesReadException
 	{		
-		super(filenameFSImage, fileSystemIO, new FileAllocationTable16(fileSystemIO), new BootBlock16(fileSystemIO));
+		super(filenameFSImage, fileSystemIO, new FileAllocationTable16(fileSystemIO), new BootBlock16(fileSystemIO), new Fat16Directory(), new DataRegion16());
 		
 		fileAllocationTable.initFileAllocationTable(bootBlock);
+		fatDirectory.initFatDirectory(bootBlock, fileAllocationTable);
+		dataRegion.initDataRegion(fileSystemIO, bootBlock);
 	}
 
 	@Override public void ls()
