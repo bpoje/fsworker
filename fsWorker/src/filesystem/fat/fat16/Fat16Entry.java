@@ -3,13 +3,17 @@ package filesystem.fat.fat16;
 import java.io.IOException;
 
 import filesystem.exception.NotEnoughBytesReadException;
+import filesystem.fat.BootBlock;
 import filesystem.fat.DataRegion;
+import filesystem.fat.FileAllocationTable;
 import filesystem.fat.FilenameStatus;
 import filesystem.fat.fat16.FileAllocationTable16;
 import filesystem.fat.FatEntry;
 import filesystem.hash.Hash;
 import filesystem.io.DataConverter;
+import filesystem.io.DataTransfer;
 import filesystem.io.FileSystemIO;
+import filesystem.utils.OutputFormater;
 
 public class Fat16Entry extends FatEntry {
 	private String filename;
@@ -24,8 +28,8 @@ public class Fat16Entry extends FatEntry {
 	 * isArchiveFlag;
 	 */
 
-	public Fat16Entry(char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
-		super(entryNumber, entryAddress, fileSystemIO);
+	public Fat16Entry(BootBlock bootBlock, FileAllocationTable fileAllocationTable, DataRegion dataRegion, char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
+		super(bootBlock, fileAllocationTable, dataRegion, entryNumber, entryAddress, fileSystemIO);
 
 		/*
 		 * long entryAddress = (long)rootDirAddress + (long)entryNumber *
@@ -183,127 +187,114 @@ public class Fat16Entry extends FatEntry {
 
 	}
 
-	public long getTotalClustersNeededForData(DataRegion16 dataRegion16) {
-		long bytesPerCluster = dataRegion16.getBytesPerCluster();
+	public long getTotalClustersNeededForData() {
+		long bytesPerCluster = ((DataRegion16)dataRegion).getBytesPerCluster();
 		long clustersNeeded = (long) Math.ceil((float) filesizeInBytes
 				/ (float) bytesPerCluster);
 		return clustersNeeded;
 	}
+	
+	public long getFileSlackSizeInBytes()
+	{
+		long bytesPerCluster = ((DataRegion16)dataRegion).getBytesPerCluster();
+		long totalClustersNeededForData = (long) Math
+				.ceil((float) filesizeInBytes / (float) bytesPerCluster);
+		
+		long totalAllocatedSizeInBytes = totalClustersNeededForData * bytesPerCluster;
+		long fileSlackSizeInBytes = totalAllocatedSizeInBytes - filesizeInBytes;
+		
+		return fileSlackSizeInBytes;
+	}
 
-	public void writeToFileSlack(DataRegion16 dataRegion16, FileAllocationTable16 fileAllocationTable16,
-			byte[] writeBuffer) throws IOException, NotEnoughBytesReadException {
+	public void writeToFileSlack(byte[] writeBuffer) throws IOException, NotEnoughBytesReadException {
 		if (filesizeInBytes <= 0)
 			return;
 		
-		long bytesPerCluster = dataRegion16.getBytesPerCluster();
-		long totalClustersNeededForData = (long) Math
-				.ceil((float) filesizeInBytes / (float) bytesPerCluster);
-
-		long totalAllocatedSizeInBytes = totalClustersNeededForData
-				* bytesPerCluster;
-		long fileSlackSizeInBytes = totalAllocatedSizeInBytes - filesizeInBytes;
+		long bytesPerCluster = ((DataRegion16)dataRegion).getBytesPerCluster();
+		//long totalClustersNeededForData = (long) Math
+		//		.ceil((float) filesizeInBytes / (float) bytesPerCluster);
+		//
+		//long totalAllocatedSizeInBytes = totalClustersNeededForData
+		//		* bytesPerCluster;
+		//long fileSlackSizeInBytes = totalAllocatedSizeInBytes - filesizeInBytes;
+		long fileSlackSizeInBytes = getFileSlackSizeInBytes();
 
 		if (writeBuffer.length != fileSlackSizeInBytes) {
 			System.out.println("Length not equal to slack size!");
 			return;
 		}
 
-		char lastFATPointerValue = fileAllocationTable16
+		char lastFATPointerValue = ((FileAllocationTable16)fileAllocationTable)
 				.getLastFATPointerValue(startingClusterNumber);
 
-		long dataClusterAddress = dataRegion16
+		long dataClusterAddress = ((DataRegion16)dataRegion)
 				.getClusterAddress(lastFATPointerValue);
 
-		System.out.println("dataClusterAddress: " + dataClusterAddress);
-		System.out.printf("dataClusterAddress: 0x%02Xh\n", dataClusterAddress);
-
-		byte cluster[] = dataRegion16.getClusterData(dataClusterAddress);
+		//DEBUG Output--------------------------------------------------------------------
+		//System.out.println("dataClusterAddress: " + dataClusterAddress);
+		//System.out.printf("dataClusterAddress: 0x%02Xh\n", dataClusterAddress);
+		//byte cluster[] = ((DataRegion16)dataRegion).getClusterData(dataClusterAddress);
+		//OutputFormater.printArrayHex(cluster, "lastCluster (includes file slack):");
+		//--------------------------------------------------------------------------------
 		
-		 for (int i = 0; i < cluster.length; i++)
-		 {
-		 System.out.printf("0x%02Xh, ", cluster[i]);
-		 }
-		 System.out.println();
-		int firstEmptyLocation = (int) (cluster.length - fileSlackSizeInBytes);
+		//int firstEmptyLocation = (int) (cluster.length - fileSlackSizeInBytes);
+		int firstEmptyLocation = (int) (bytesPerCluster - fileSlackSizeInBytes);
 
-		System.out.println("firstEmptyLocation" + firstEmptyLocation);
-		System.out.printf("firstEmptyLocation: 0x%02Xh\n", firstEmptyLocation);
-
-		// TODO
-		// 1. write to file slack to physical file
-		// 2. implement a method that calculates file slack size for a file (you
-		// need it to determine writeBuffer length)
-		// 3. replace fileSlackSize calculations with 2 in scanFileSystem() and
-		// here
+		//System.out.println("firstEmptyLocation" + firstEmptyLocation);
+		//System.out.printf("firstEmptyLocation: 0x%02Xh\n", firstEmptyLocation);
 		
 		this.fileSystemIO.writeFSImage(dataClusterAddress + firstEmptyLocation, writeBuffer);
-
-		//try {
-		//	Thread.sleep(20000);
-		//} catch (InterruptedException e) {
-		//	// Auto-generated catch block
-		//	e.printStackTrace();
-		//}
-
 	}
 	
-	public byte[] readFromFileSlack(DataRegion16 dataRegion16, FileAllocationTable16 fileAllocationTable16) throws IOException, NotEnoughBytesReadException
+	public DataTransfer readFromFileSlack() throws IOException, NotEnoughBytesReadException
 	{
 		if (filesizeInBytes <= 0)
-			return null;
+			return new DataTransfer(null, "");;
 		
-		long bytesPerCluster = dataRegion16.getBytesPerCluster();
-		long totalClustersNeededForData = (long) Math
-				.ceil((float) filesizeInBytes / (float) bytesPerCluster);
+		long bytesPerCluster = ((DataRegion16)dataRegion).getBytesPerCluster();
+		//long totalClustersNeededForData = (long) Math
+		//		.ceil((float) filesizeInBytes / (float) bytesPerCluster);
+		//
+		//long totalAllocatedSizeInBytes = totalClustersNeededForData
+		//		* bytesPerCluster;
+		//long fileSlackSizeInBytes = totalAllocatedSizeInBytes - filesizeInBytes;
+		long fileSlackSizeInBytes = getFileSlackSizeInBytes();
 
-		long totalAllocatedSizeInBytes = totalClustersNeededForData
-				* bytesPerCluster;
-		long fileSlackSizeInBytes = totalAllocatedSizeInBytes - filesizeInBytes;
-
-		//if (writeBuffer.length != fileSlackSizeInBytes) {
-		//	System.out.println("Length not equal to slack size!");
-		//	return;
-		//}
-
-		char lastFATPointerValue = fileAllocationTable16
+		char lastFATPointerValue = ((FileAllocationTable16)fileAllocationTable)
 				.getLastFATPointerValue(startingClusterNumber);
 
-		long dataClusterAddress = dataRegion16
+		long dataClusterAddress = ((DataRegion16)dataRegion)
 				.getClusterAddress(lastFATPointerValue);
-
-		System.out.println("dataClusterAddress: " + dataClusterAddress);
-		System.out.printf("dataClusterAddress: 0x%02Xh\n", dataClusterAddress);
-
-		byte cluster[] = dataRegion16.getClusterData(dataClusterAddress);
 		
-		 for (int i = 0; i < cluster.length; i++)
-		 {
-		 System.out.printf("0x%02Xh, ", cluster[i]);
-		 }
-		 System.out.println();
-		int firstEmptyLocation = (int) (cluster.length - fileSlackSizeInBytes);
-
-		System.out.println("firstEmptyLocation" + firstEmptyLocation);
-		System.out.printf("firstEmptyLocation: 0x%02Xh\n", firstEmptyLocation);
-
-		// TODO
-		// 1. write to file slack to physical file
-		// 2. implement a method that calculates file slack size for a file (you
-		// need it to determine writeBuffer length)
-		// 3. replace fileSlackSize calculations with 2 in scanFileSystem() and
-		// here
+		//DEBUG Output--------------------------------------------------------------------
+		//System.out.println("dataClusterAddress: " + dataClusterAddress);
+		//System.out.printf("dataClusterAddress: 0x%02Xh\n", dataClusterAddress);
+		//byte cluster[] = ((DataRegion16)dataRegion).getClusterData(dataClusterAddress);
+		//OutputFormater.printArrayHex(cluster, "lastCluster (includes file slack):");
+		//--------------------------------------------------------------------------------
 		
-		return this.fileSystemIO.readFSImage(dataClusterAddress + firstEmptyLocation, (int)fileSlackSizeInBytes);
+		//int firstEmptyLocation = (int) (cluster.length - fileSlackSizeInBytes);
+		int firstEmptyLocation = (int) (bytesPerCluster - fileSlackSizeInBytes);
+
+		//System.out.println("firstEmptyLocation" + firstEmptyLocation);
+		//System.out.printf("firstEmptyLocation: 0x%02Xh\n", firstEmptyLocation);
+		
+		byte [] payload = this.fileSystemIO.readFSImage(dataClusterAddress + firstEmptyLocation, (int)fileSlackSizeInBytes);
+		
+		//Stores data and calculates hash
+		DataTransfer dataTransfer = new DataTransfer(payload);
+		
+		return dataTransfer;
 	}
 
-	public byte[] getData(DataRegion16 dataRegion16, FileAllocationTable16 fileAllocationTable16) throws IOException, NotEnoughBytesReadException {
+	public DataTransfer getData() throws IOException, NotEnoughBytesReadException {
 		if (filesizeInBytes <= 0)
-			return null;
+			return new DataTransfer(null, "");
 		
 		char clusterNumber = startingClusterNumber;
 		//System.out.println("\t\t\tclusterNumber: " + (int) clusterNumber);
 		
-		long bytesPerCluster = dataRegion16.getBytesPerCluster();
+		long bytesPerCluster = ((DataRegion16)dataRegion).getBytesPerCluster();
 		
 		// long remainingDataBytes = filesizeInBytes;
 		long clustersNeeded = (long) Math.ceil((float) filesizeInBytes
@@ -319,12 +310,12 @@ public class Fat16Entry extends FatEntry {
 
 		// while (remainingDataBytes > 0)
 		while ((int) clusterNumber != (int) 0xFFFF) {
-			long address = dataRegion16.getClusterAddress(clusterNumber);
+			long address = ((DataRegion16)dataRegion).getClusterAddress(clusterNumber);
 
 			//System.out.println("address: " + address);
 			//System.out.printf("address: 0x%02Xh\n", address);
 
-			byte cluster[] = dataRegion16.getClusterData(address);
+			byte cluster[] = ((DataRegion16)dataRegion).getClusterData(address);
 
 			// Copy cluster to fileData array
 			for (int i = 0; i < cluster.length
@@ -337,37 +328,46 @@ public class Fat16Entry extends FatEntry {
 			clusterCounter++;
 
 			// Get pointer from FAT
-			long fatPointerAddress = fileAllocationTable16
+			long fatPointerAddress = ((FileAllocationTable16)fileAllocationTable)
 					.getFATPointerAddress(clusterNumber);
 
 			//System.out.println("fatPointerAddress: " + (int) fatPointerAddress);
 			//System.out.printf("fatPointerAddress: 0x%02Xh\n",
 			//		(int) fatPointerAddress);
 
-			clusterNumber = fileAllocationTable16.getFATPointerValue(fatPointerAddress);
+			clusterNumber = ((FileAllocationTable16)fileAllocationTable).getFATPointerValue(fatPointerAddress);
 
 			//System.out.println("clusterNumber: " + (int) clusterNumber);
 			//System.out.printf("clusterNumber: 0x%02Xh\n", (int) clusterNumber);
 		}
+		
+		//Stores data and calculates hash
+		DataTransfer dataTransfer = new DataTransfer(fileData);
 
-		return fileData;
+		return dataTransfer;
 	}
 
-	public String calculateMd5(DataRegion16 dataRegion16, FileAllocationTable16 fileAllocationTable16) throws IOException, NotEnoughBytesReadException {
-		byte fileData[] = getData(dataRegion16, fileAllocationTable16);
+	public String calculateMd5OfData() throws IOException, NotEnoughBytesReadException {
+		byte fileData[] = getData().getPayload();
 
 		String md5 = "";
 
 		// If not folder
 		if (fileData != null) {
-			//System.out.println("\t\t\t\t\t\t\t\tfileData.length: "
-			//		+ (fileData.length));
-			//System.out
-			//		.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): "
-			//				+ getFilesizeInBytes());
+			md5 = Hash.getMd5FromByteArray(fileData);
+		}
 
-			md5 = Hash.getMd5FromFileData(fileData);
-			//System.out.println("MD5 digest(in hex format):: " + md5);
+		return md5;
+	}
+	
+	public String calculateMd5OfFileSlack() throws IOException, NotEnoughBytesReadException {
+		byte fileData[] = readFromFileSlack().getPayload();
+
+		String md5 = "";
+
+		// If not folder
+		if (fileData != null) {
+			md5 = Hash.getMd5FromByteArray(fileData);
 		}
 
 		return md5;

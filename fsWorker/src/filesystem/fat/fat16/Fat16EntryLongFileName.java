@@ -3,7 +3,10 @@ package filesystem.fat.fat16;
 import java.io.IOException;
 
 import filesystem.exception.NotEnoughBytesReadException;
+import filesystem.fat.BootBlock;
+import filesystem.fat.DataRegion;
 import filesystem.fat.FatEntry;
+import filesystem.fat.FileAllocationTable;
 import filesystem.io.DataConverter;
 import filesystem.io.FileSystemIO;
 
@@ -11,9 +14,9 @@ public class Fat16EntryLongFileName extends FatEntry {
 	private boolean isLast;
 	private char LFNNumber;
 
-	public Fat16EntryLongFileName(char entryNumber, long entryAddress,
+	public Fat16EntryLongFileName(BootBlock bootBlock, FileAllocationTable fileAllocationTable, DataRegion dataRegion, char entryNumber, long entryAddress,
 			FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
-		super(entryNumber, entryAddress, fileSystemIO);
+		super(bootBlock, fileAllocationTable, dataRegion, entryNumber, entryAddress, fileSystemIO);
 
 		readLFNNumber();
 	}

@@ -3,14 +3,14 @@ package filesystem.hash;
 import java.security.MessageDigest;
 
 public class Hash {
-	public static String getMd5FromFileData(byte fileData[])
+	public static String getMd5FromByteArray(byte byteArray[])
 	{
 		String md5 = null;
 		
 		try
 		{
 			MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-			byte[] md5digest = messageDigest.digest(fileData);
+			byte[] md5digest = messageDigest.digest(byteArray);
 			
 			//convert the byte to hex format
 	        StringBuffer md5HexString = new StringBuffer();
@@ -23,7 +23,7 @@ public class Hash {
 	    	
 	    	md5 = md5HexString.toString();
 	    	
-	    	System.out.println("MD5 digest(in hex format):: " + md5);
+	    	//System.out.println("MD5 digest(in hex format):: " + md5);
 		}
 		catch (Exception e)
 		{

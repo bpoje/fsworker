@@ -3,8 +3,10 @@ package main;
 import filesystem.FileSystemType;
 import filesystem.fat.FatEntry;
 import filesystem.fat.FileSystemFat;
+import filesystem.fat.fat16.DataRegion16;
 import filesystem.fat.fat16.Fat16Entry;
 import filesystem.fat.fat16.FileSystemFat16;
+import filesystem.io.DataTransfer;
 import filesystem.io.FileSystemIO;
 import filesystem.utils.OutputFormater;
 import gui.MainView;
@@ -46,7 +48,10 @@ public class Main {
 				
 				System.out.println("Filename: " + fat16Entry.getFilename());
 				
-				byte [] data = fileSystemFAT16.getData(fat16Entry);
+				DataTransfer dtData = fileSystemFAT16.getData(fat16Entry);
+				System.out.println("dtData: " + dtData);
+				byte [] data = dtData.getPayload();
+				System.out.println("dtData.getMd5(): " + dtData.getMd5());
 				//System.out.println("Data: " + data);
 				
 				if (fat16Entry.getFilename().compareTo("02") == 0)
@@ -73,7 +78,7 @@ public class Main {
 							rembemberDotDotTest = fat16Entry1;
 						}
 						
-						byte [] data1 = fileSystemFAT16.getData(fat16Entry1);
+						//byte [] data1 = fileSystemFAT16.getData(fat16Entry1).getPayload();
 						//System.out.println("Data1: " + data1);
 						
 						/*
@@ -106,6 +111,8 @@ public class Main {
 				System.out.println("xxx.getFilename(): " + xxx.getFilename());
 			}
 			
+			System.out.println("getFileSlackSizeInBytes(DataRegion16 dataRegion16): ");
+			
 			byte toSlack[] = new byte[1214];
 			
 			for (int i = 0; i < toSlack.length; i++)
@@ -115,9 +122,11 @@ public class Main {
 			
 			fileSystemFAT16.writeToSlack(file111, toSlack);
 			
-			byte [] abcd1234 = fileSystemFAT16.readFromSlack(file111);
+			DataTransfer dTabcd1234 = fileSystemFAT16.readFromSlack(file111);
+			byte [] abcd1234 = dTabcd1234.getPayload();
+			System.out.println("dTabcd1234.getMd5(): " + dTabcd1234.getMd5());
 			
-			OutputFormater.printArrayHex(abcd1234, "abcd1234");
+			OutputFormater.printArrayHex(abcd1234, "abcd1234:");
 			System.out.println("abcd1234.length: " + abcd1234.length);
 			
 			MainView mainView = new MainView("MainView", fileSystemFAT16);

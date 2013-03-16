@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.FatEntry;
+import filesystem.io.DataTransfer;
 import filesystem.io.FileSystemIO;
 
 public abstract class FileSystem {
@@ -22,8 +23,8 @@ public abstract class FileSystem {
 	}
 	
 	public abstract ArrayList<FatEntry> ls() throws IOException, NotEnoughBytesReadException;
-	public abstract byte [] getData(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
+	public abstract DataTransfer getData(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
 	public abstract boolean cd(FileSystemEntry entry);
 	public abstract void writeToSlack(FileSystemEntry entry, byte [] buffer) throws IOException, NotEnoughBytesReadException;
-	public abstract byte [] readFromSlack(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
+	public abstract DataTransfer readFromSlack(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
 }

@@ -111,7 +111,8 @@ public class Fat16Directory extends FatDirectory {
 		{
 			long entryAddress = calculateRootDirectoryEntryAddress((char)entryNumber);
 			
-			FatEntry entry = new FatEntry((char) entryNumber, entryAddress, fileSystemIO);
+			//FatEntry entry = new FatEntry((char) entryNumber, entryAddress, fileSystemIO);
+			FatEntry entry = new FatEntry(bootBlock, fileAllocationTable, dataRegion, (char) entryNumber, entryAddress, fileSystemIO);
 			
 			FilenameStatus filenameStatus = entry.getFilenameStatus();
 			//Break for loop if end-of-list
@@ -128,12 +129,12 @@ public class Fat16Directory extends FatDirectory {
 			
 			if (entry.isLongFilenameEntry())
 			{			
-				Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName((char)entryNumber, entryAddress, fileSystemIO);
+				Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, fileSystemIO);
 				//System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
 			}
 			else
 			{				
-				Fat16Entry dosFilename = new Fat16Entry((char)entryNumber, entryAddress, fileSystemIO);
+				Fat16Entry dosFilename = new Fat16Entry(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, fileSystemIO);
 				
 				boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
 				
@@ -194,7 +195,10 @@ public class Fat16Directory extends FatDirectory {
 			//calculateSubDirectoryEntryAddress(long address, char entryNumber, byte buffer[])
 			long entryAddress = calculateSubDirectoryEntryAddress(address, (char)entryNumber);
 			
-			FatEntry entry = new FatEntry((char) entryNumber, entryAddress, this.fileSystemIO);
+			//FatEntry entry = new FatEntry((char) entryNumber, entryAddress, this.fileSystemIO);
+			FatEntry entry = new FatEntry(bootBlock, fileAllocationTable, dataRegion, (char) entryNumber, entryAddress, this.fileSystemIO);
+			
+			//bootBlock, fileAllocationTable, dataRegion, 
 			
 			FilenameStatus filenameStatus = entry.getFilenameStatus();
 			//Break for loop if end-of-list
@@ -209,12 +213,12 @@ public class Fat16Directory extends FatDirectory {
 			
 			if (entry.isLongFilenameEntry())
 			{
-				Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName((char)entryNumber, entryAddress, this.fileSystemIO);
+				Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO);
 				//System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
 			}
 			else
 			{
-				Fat16Entry dosFilename = new Fat16Entry((char)entryNumber, entryAddress, this.fileSystemIO);
+				Fat16Entry dosFilename = new Fat16Entry(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO);
 				boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
 				
 				arrayListFiles.add(dosFilename);

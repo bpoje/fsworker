@@ -26,10 +26,21 @@ public class FatEntry extends FileSystemEntry {
 	// contains a normal filename
 	// character (e.g. 'A'), but there are some special values)
 	protected FilenameStatus filenameStatus;
+	
+	//----------------------------------------------------------------------
+	protected BootBlock bootBlock;
+	protected FileAllocationTable fileAllocationTable;
+	protected FatDirectory fatDirectory;
+	protected DataRegion dataRegion;
+	//----------------------------------------------------------------------
 
 	public static final long rootDirectoryEntrySize = 32; // bytes
 
-	public FatEntry(char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
+	//public FatEntry(char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
+	public FatEntry(BootBlock bootBlock, FileAllocationTable fileAllocationTable, DataRegion dataRegion, char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
+		this.bootBlock = bootBlock;
+		this.fileAllocationTable = fileAllocationTable;
+		this.dataRegion = dataRegion;
 		this.entryNumber = entryNumber;
 		this.entryAddress = entryAddress;
 		this.fileSystemIO = fileSystemIO;

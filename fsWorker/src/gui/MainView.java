@@ -249,8 +249,8 @@ public class MainView extends JFrame {
 			String filenameExtension = file.getFilenameExtension();
 			char startingClusterNumber = file.getStartingClusterNumber();
 			long filesizeInBytes = file.getFilesizeInBytes();
-			String md5 = file.calculateMd5(dataRegion16, fileAllocationTable16);
-			long totalClustersNeededForData = file.getTotalClustersNeededForData(dataRegion16);
+			String md5 = file.calculateMd5OfData();
+			long totalClustersNeededForData = file.getTotalClustersNeededForData();
 			long totalAllocatedSizeInBytes = totalClustersNeededForData * dataRegion16.getBytesPerCluster();
 			long fileSlackSizeInBytes = totalAllocatedSizeInBytes - filesizeInBytes;
 			

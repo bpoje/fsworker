@@ -9,6 +9,7 @@ import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.FatEntry;
 import filesystem.fat.FileSystemFat;
 import filesystem.hash.Hash;
+import filesystem.io.DataTransfer;
 import filesystem.io.FileSystemIO;
 
 public class FileSystemFat16 extends FileSystemFat{
@@ -46,28 +47,17 @@ public class FileSystemFat16 extends FileSystemFat{
 	}
 
 	@Override
-	public byte [] getData(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException {
+	public DataTransfer getData(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException {
 		if (entry == null)
-			return null;
+			return new DataTransfer(null, "");
 		
 		Fat16Entry dosFilename = (Fat16Entry)entry;
 		
 		if (dosFilename.isLongFilenameEntry() || dosFilename.isSubdirectoryEntry())
-			return null;
+			return new DataTransfer(null, "");
 		
-		byte fileData[] = dosFilename.getData((DataRegion16)dataRegion, (FileAllocationTable16)fileAllocationTable);
-		
-		//If not folder
-		if (fileData != null)
-		{
-			//System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
-			//System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
-			
-			String md5 = Hash.getMd5FromFileData(fileData);
-			System.out.println("MD5 digest(in hex format):: " + md5);
-		}
-		
-		return fileData;
+		DataTransfer dataTransfer = dosFilename.getData();
+		return dataTransfer;
 	}
 	
 	//Returns true if successful
@@ -178,13 +168,13 @@ public class FileSystemFat16 extends FileSystemFat{
 		if (dosFilename.isLongFilenameEntry() || dosFilename.isSubdirectoryEntry())
 			return;
 		
-		dosFilename.writeToFileSlack((DataRegion16)this.dataRegion, (FileAllocationTable16)this.fileAllocationTable, buffer);
+		dosFilename.writeToFileSlack(buffer);
 		
 		return;
 	}
 
 	@Override
-	public byte[] readFromSlack(FileSystemEntry entry) throws IOException,
+	public DataTransfer readFromSlack(FileSystemEntry entry) throws IOException,
 			NotEnoughBytesReadException {
 		if (entry == null)
 			return null;
@@ -194,19 +184,9 @@ public class FileSystemFat16 extends FileSystemFat{
 		if (dosFilename.isLongFilenameEntry() || dosFilename.isSubdirectoryEntry())
 			return null;
 		
-		byte fileSlackData[] = dosFilename.readFromFileSlack((DataRegion16)this.dataRegion, (FileAllocationTable16)this.fileAllocationTable);
-		
-		//If not folder
-		if (fileSlackData != null)
-		{
-			//System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
-			//System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
-			
-			String md5 = Hash.getMd5FromFileData(fileSlackData);
-			System.out.println("MD5 digest(in hex format):: " + md5);
-		}
-		
-		return fileSlackData;
+		DataTransfer dataTransfer = dosFilename.readFromFileSlack();
+		//System.out.println("MD5 digest(in hex format):: " + md5);
+		return dataTransfer;
 	}
 	
 	
