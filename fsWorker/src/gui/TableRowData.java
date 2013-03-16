@@ -1,7 +1,6 @@
 package gui;
 
-public class TableRowData
-{
+public class TableRowData {
 	private String filename = null;
 	private String filenameExtension;
 	private String startingClusterNumber;
@@ -9,10 +8,13 @@ public class TableRowData
 	private String totalClustersNeededForData;
 	private String totalAllocatedSizeInBytes;
 	private String fileSlackSizeInBytes;
-	private String md5;
+	private String md5OfData;
+	private String md5OfFileSlack;
 	private boolean isRoot;
+
 	/**
 	 * Created on: Feb 23, 2008
+	 * 
 	 * @Author: sandarenu
 	 * @param source
 	 * @param client
@@ -20,8 +22,11 @@ public class TableRowData
 	 * @param family
 	 * @param isRoot
 	 */
-	public TableRowData(String filename, String filenameExtension, String startingClusterNumber, String filesizeInBytes, String totalClustersNeededForData, String totalAllocatedSizeInBytes, String fileSlackSizeInBytes, String md5, boolean isLeaf)
-	{
+	public TableRowData(String filename, String filenameExtension,
+			String startingClusterNumber, String filesizeInBytes,
+			String totalClustersNeededForData,
+			String totalAllocatedSizeInBytes, String fileSlackSizeInBytes,
+			String md5OfData, String md5OfFileSlack, boolean isLeaf) {
 		this.filename = filename;
 		this.filenameExtension = filenameExtension;
 		this.startingClusterNumber = startingClusterNumber;
@@ -29,101 +34,123 @@ public class TableRowData
 		this.totalClustersNeededForData = totalClustersNeededForData;
 		this.totalAllocatedSizeInBytes = totalAllocatedSizeInBytes;
 		this.fileSlackSizeInBytes = fileSlackSizeInBytes;
-		this.md5 = md5;
+		this.md5OfData = md5OfData;
+		this.md5OfFileSlack = md5OfFileSlack;
 		this.isRoot = isLeaf;
 	}
+
 	/**
 	 * @return the client
 	 */
-	public String getFilenameExtension()
-	{
+	public String getFilenameExtension() {
 		return filenameExtension;
 	}
+
 	/**
-	 * @param client the client to set
+	 * @param client
+	 *            the client to set
 	 */
-	public void setFilenameExtension(String filenameExtension)
-	{
+	public void setFilenameExtension(String filenameExtension) {
 		this.filenameExtension = filenameExtension;
 	}
+
 	/**
 	 * @return the family
 	 */
-	public String getFilesizeInBytes()
-	{
+	public String getFilesizeInBytes() {
 		return filesizeInBytes;
 	}
+
 	/**
-	 * @param family the family to set
+	 * @param family
+	 *            the family to set
 	 */
-	public void setFilesizeInBytes(String filesizeInBytes)
-	{
+	public void setFilesizeInBytes(String filesizeInBytes) {
 		this.filesizeInBytes = filesizeInBytes;
 	}
+
 	/**
 	 * @return the isRoot
 	 */
-	public boolean isRoot()
-	{
+	public boolean isRoot() {
 		return isRoot;
 	}
+
 	/**
-	 * @param isRoot the isRoot to set
+	 * @param isRoot
+	 *            the isRoot to set
 	 */
-	public void setRoot(boolean isLeaf)
-	{
+	public void setRoot(boolean isLeaf) {
 		this.isRoot = isLeaf;
 	}
+
 	/**
 	 * @return the source
 	 */
-	public String getFilename()
-	{
+	public String getFilename() {
 		return filename;
 	}
+
 	/**
-	 * @param source the source to set
+	 * @param source
+	 *            the source to set
 	 */
-	public void setFilename(String filename)
-	{
+	public void setFilename(String filename) {
 		this.filename = filename;
 	}
+
 	/**
 	 * @return the spouse
 	 */
-	public String getStartingClusterNumber()
-	{
+	public String getStartingClusterNumber() {
 		return startingClusterNumber;
 	}
+
 	/**
-	 * @param spouse the spouse to set
+	 * @param spouse
+	 *            the spouse to set
 	 */
-	public void setStartingClusterNumber(String startingClusterNumber)
-	{
+	public void setStartingClusterNumber(String startingClusterNumber) {
 		this.startingClusterNumber = startingClusterNumber;
 	}
-	public String getMd5() {
-		return md5;
+
+	public String getMd5OfData() {
+		return md5OfData;
 	}
-	public void setMd5(String md5) {
-		this.md5 = md5;
+
+	public void setMd5OfData(String md5OfData) {
+		this.md5OfData = md5OfData;
 	}
+
 	public String getTotalClustersNeededForData() {
 		return totalClustersNeededForData;
 	}
+
 	public void setTotalClustersNeededForData(String totalClustersNeededForData) {
 		this.totalClustersNeededForData = totalClustersNeededForData;
 	}
+
 	public String getTotalAllocatedSizeInBytes() {
 		return totalAllocatedSizeInBytes;
 	}
+
 	public void setTotalAllocatedSizeInBytes(String totalAllocatedSizeInBytes) {
 		this.totalAllocatedSizeInBytes = totalAllocatedSizeInBytes;
 	}
+
 	public String getFileSlackSizeInBytes() {
 		return fileSlackSizeInBytes;
 	}
+
 	public void setFileSlackSizeInBytes(String fileSlackSizeInBytes) {
 		this.fileSlackSizeInBytes = fileSlackSizeInBytes;
+	}
+
+	public String getMd5OfFileSlack() {
+		return md5OfFileSlack;
+	}
+
+	public void setMd5OfFileSlack(String md5OfFileSlack) {
+		this.md5OfFileSlack = md5OfFileSlack;
 	}
 }
