@@ -2,10 +2,9 @@ package filesystem.fat;
 
 import java.io.IOException;
 
-import fat.DataConverter;
-import fat.FilenameStatus;
 import filesystem.FileSystemEntry;
 import filesystem.exception.NotEnoughBytesReadException;
+import filesystem.io.DataConverter;
 import filesystem.io.FileSystemIO;
 
 public class FatEntry extends FileSystemEntry {
@@ -49,8 +48,8 @@ public class FatEntry extends FileSystemEntry {
 		byte buffer[] = fileSystemIO.readFSImage(entryAddress, 1);
 		byte filenameStatusByte = buffer[0];
 		
-		System.out.println("filenameStatusByte: " + filenameStatusByte);
-		System.out.printf("filenameStatusByte: 0x%02Xh\n", filenameStatusByte);
+		//System.out.println("filenameStatusByte: " + filenameStatusByte);
+		//System.out.printf("filenameStatusByte: 0x%02Xh\n", filenameStatusByte);
 
 		switch (filenameStatusByte) {
 		// Entry is available and no subsequent entry is in use

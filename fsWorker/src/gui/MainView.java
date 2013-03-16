@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
@@ -22,12 +23,18 @@ import org.jdesktop.swingx.renderer.StringValue;
 import org.jdesktop.swingx.treetable.*;
 import org.jdesktop.swingx.decorator.*;
 
-import fat.BIOSParameterBlock;
-import fat.DOSFilename;
-import fat.DataRegion;
-import fat.FAT12_16;
-import fat.RootDirectory;
-import fat.RootDirectoryEntry;
+import filesystem.exception.NotEnoughBytesReadException;
+import filesystem.fat.BootBlock;
+import filesystem.fat.DataRegion;
+import filesystem.fat.FatDirectory;
+import filesystem.fat.FatEntry;
+import filesystem.fat.FileAllocationTable;
+import filesystem.fat.fat16.BootBlock16;
+import filesystem.fat.fat16.DataRegion16;
+import filesystem.fat.fat16.Fat16Directory;
+import filesystem.fat.fat16.Fat16Entry;
+import filesystem.fat.fat16.FileAllocationTable16;
+import filesystem.fat.fat16.FileSystemFat16;
 
 import javax.swing.JScrollPane;
 import javax.swing.event.TreeSelectionEvent;
@@ -37,24 +44,40 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class MainView extends JFrame {
-	private BIOSParameterBlock biosParameterBlock;
-	private RootDirectory rootDir;
+	private BootBlock bootBlock;
+	private FatDirectory rootDirectory;
 	private DataRegion dataRegion;
-	private FAT12_16 fat12_16;
+	private FileAllocationTable fileAllocationTable;
 	
+	//Converted types
+	private BootBlock16 bootBlock16;
+	private Fat16Directory fat16Directory;
+	private DataRegion16 dataRegion16;
+	private FileAllocationTable16 fileAllocationTable16;
+	
+	//Other
 	private long totalSlackFileSizeInBytes = 0;
 	
 	private Container container;
 	private Container infoContainer;
 	
-	public MainView(String title, BIOSParameterBlock biosParameterBlock, RootDirectory rootDir, DataRegion dataRegion, FAT12_16 fat12_16)
+	//public MainView(String title, BootBlock bootBlock, FatDirectory fatDirectory, DataRegion dataRegion, FileAllocationTable fileAllocationTable) throws IOException, NotEnoughBytesReadException
+	public MainView(String title, FileSystemFat16 fileSystemFAT16) throws IOException, NotEnoughBytesReadException
 	{
 		super(title);
 		
-		this.biosParameterBlock = biosParameterBlock;
-		this.rootDir = rootDir;
-		this.dataRegion = dataRegion;
-		this.fat12_16 = fat12_16;
+		
+		
+		
+		this.bootBlock = fileSystemFAT16.getBootBlock();
+		this.rootDirectory = fileSystemFAT16.getFatDirectory();
+		this.dataRegion = fileSystemFAT16.getDataRegion();
+		this.fileAllocationTable = fileSystemFAT16.getFileAllocationTable();
+		
+		this.bootBlock16 = (BootBlock16)bootBlock;
+		this.fat16Directory = (Fat16Directory)rootDirectory;
+		dataRegion16 = (DataRegion16)dataRegion;
+		fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
 		
 		setSize(800, 400);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -129,9 +152,9 @@ public class MainView extends JFrame {
 		
 		
 		
-		ArrayList<RootDirectoryEntry> filesInFolder = rootDir.directory();
+		ArrayList<FatEntry> filesInFolder = fat16Directory.directory();
 		
-		System.out.println("files.size(): " + filesInFolder.size());
+		//System.out.println("files.size(): " + filesInFolder.size());
 		
 		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData("CF","","","","","","","",true));
 		
@@ -159,33 +182,33 @@ public class MainView extends JFrame {
         JLabel label1 = new JLabel("Total file slack size in bytes: " + formatOutput(totalSlackFileSizeInBytes));
         infoContainer.add(label1);
         
-        JLabel label2 = new JLabel("FAT type: " + biosParameterBlock.getType());
+        JLabel label2 = new JLabel("FAT type: " + bootBlock16.getType());
         infoContainer.add(label2);
         
-        JLabel label3 = new JLabel("Bytes per sector: " + formatOutput((long)biosParameterBlock.getBPB_BytsPerSec()));
+        JLabel label3 = new JLabel("Bytes per sector: " + formatOutput((long)bootBlock16.getBPB_BytsPerSec()));
         infoContainer.add(label3);
         
-        JLabel label4 = new JLabel("Number of sectors per allocation unit (cluster): " + (long)biosParameterBlock.getBPB_SecPerClus());
+        JLabel label4 = new JLabel("Number of sectors per allocation unit (cluster): " + (long)bootBlock16.getBPB_SecPerClus());
         infoContainer.add(label4);
         
         //Cluster <=> AllocationUnit
-        long bytesPerAllocationUnit = (long)biosParameterBlock.getBPB_BytsPerSec() * (long)biosParameterBlock.getBPB_SecPerClus();
+        long bytesPerAllocationUnit = (long)bootBlock16.getBPB_BytsPerSec() * (long)bootBlock16.getBPB_SecPerClus();
         JLabel label5 = new JLabel("Number of Bytes per allocation unit (cluster): " + formatOutput(bytesPerAllocationUnit));
         infoContainer.add(label5);
         
-        JLabel label6 = new JLabel("Number of reserved blocks: " + (long)biosParameterBlock.getBPB_RsvdSecCnt());
+        JLabel label6 = new JLabel("Number of reserved blocks: " + (long)bootBlock16.getBPB_RsvdSecCnt());
         infoContainer.add(label6);
         
-        JLabel label7 = new JLabel("Number of FAT data structures on the volume: " + (long)biosParameterBlock.getBPB_NumFATs());
+        JLabel label7 = new JLabel("Number of FAT data structures on the volume: " + (long)bootBlock16.getBPB_NumFATs());
         infoContainer.add(label7);
         
-        JLabel label8 = new JLabel("Number of sectors occupied by ONE FAT: " + (long)biosParameterBlock.getFATSz());
+        JLabel label8 = new JLabel("Number of sectors occupied by ONE FAT: " + (long)bootBlock16.getFATSz());
         infoContainer.add(label8);
         
-        JLabel label9 = new JLabel("Number of sectors in data region: " + (long)biosParameterBlock.getNumberOfDataSectors());
+        JLabel label9 = new JLabel("Number of sectors in data region: " + (long)bootBlock16.getNumberOfDataSectors());
         infoContainer.add(label9);
         
-        JLabel label10 = new JLabel("Number of clusters in data region: " + (long)biosParameterBlock.getCountofClustersInDataRegion());
+        JLabel label10 = new JLabel("Number of clusters in data region: " + (long)bootBlock16.getCountofClustersInDataRegion());
         infoContainer.add(label10);
         
         container.add(infoContainer);
@@ -216,19 +239,19 @@ public class MainView extends JFrame {
 		return output.toString();
 	}
 	
-	private void scanFileSystem(ArrayList<RootDirectoryEntry> files, DefaultMutableTreeNode treeNode)
+	private void scanFileSystem(ArrayList<FatEntry> files, DefaultMutableTreeNode treeNode) throws IOException, NotEnoughBytesReadException
 	{
 		for (int i = 0; i < files.size(); i++)
 		{
-			DOSFilename file = (DOSFilename)files.get(i);
+			Fat16Entry file = (Fat16Entry)files.get(i);
 			
 			String filename = file.getFilename();
 			String filenameExtension = file.getFilenameExtension();
 			char startingClusterNumber = file.getStartingClusterNumber();
 			long filesizeInBytes = file.getFilesizeInBytes();
-			String md5 = file.calculateMd5(dataRegion, fat12_16);
-			long totalClustersNeededForData = file.getTotalClustersNeededForData(dataRegion);
-			long totalAllocatedSizeInBytes = totalClustersNeededForData * dataRegion.getBytesPerCluster();
+			String md5 = file.calculateMd5(dataRegion16, fileAllocationTable16);
+			long totalClustersNeededForData = file.getTotalClustersNeededForData(dataRegion16);
+			long totalAllocatedSizeInBytes = totalClustersNeededForData * dataRegion16.getBytesPerCluster();
 			long fileSlackSizeInBytes = totalAllocatedSizeInBytes - filesizeInBytes;
 			
 			totalSlackFileSizeInBytes += fileSlackSizeInBytes;
@@ -247,8 +270,8 @@ public class MainView extends JFrame {
 				//----------------------
 				//long add = fat12_16.getLastFATPointerAddress(file.getStartingClusterNumber());
 				//System.out.println("add: " + add);
-				byte [] writeBuffer = new byte[2002];
-				file.writeToFileSlack(dataRegion, fat12_16, writeBuffer);
+				//byte [] writeBuffer = new byte[2002];
+				//file.writeToFileSlack(dataRegion16, fileAllocationTable16, writeBuffer);
 				//----------------------
 			}
 			else
@@ -256,10 +279,10 @@ public class MainView extends JFrame {
 				//DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,"","",true));
 				DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5,true));
 				
-				long adr = dataRegion.getClusterAddress(file.getStartingClusterNumber());
-				ArrayList<RootDirectoryEntry> filesInSubdir = rootDir.subDirectory(adr);
+				long adr = dataRegion16.getClusterAddress(file.getStartingClusterNumber());
+				ArrayList<FatEntry> filesInSubdir = ((Fat16Directory)rootDirectory).subDirectory(adr);
 				
-				System.out.println("filesInSubdir.size(): " + filesInSubdir.size());
+				//System.out.println("filesInSubdir.size(): " + filesInSubdir.size());
 				
 				/*
 				//DEBUG

@@ -3,10 +3,10 @@ package filesystem.fat.fat16;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import fat.DataConverter;
 import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.BootBlock;
 import filesystem.fat.FileAllocationTable;
+import filesystem.io.DataConverter;
 import filesystem.io.FileSystemIO;
 
 public class FileAllocationTable16 extends FileAllocationTable {

@@ -1,21 +1,20 @@
 package filesystem.fat.fat16;
 
-import hash.Hash;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
 import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.fat16.Fat16Entry;
-import fat.FilenameStatus;
-import fat.RootDirectoryEntry;
 import filesystem.fat.fat16.Fat16EntryLongFileName;
 import filesystem.fat.FatDirectory;
+import filesystem.hash.Hash;
 import filesystem.io.FileSystemIO;
 import filesystem.fat.BootBlock;
 import filesystem.fat.DataRegion;
 import filesystem.fat.FatEntry;
 import filesystem.fat.FileAllocationTable;
+import filesystem.fat.FilenameStatus;
 
 public class Fat16Directory extends FatDirectory {
 	protected BootBlock bootBlock;
@@ -119,18 +118,18 @@ public class Fat16Directory extends FatDirectory {
 			if (filenameStatus == FilenameStatus.entryIsAvailableAndNoSubsequentEntryIsInUse)
 				break;
 			
-			System.out.println("\t entryNumber = : " + entryNumber);
-			System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
+			//System.out.println("\t entryNumber = : " + entryNumber);
+			//System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
 			
-			System.out.println("entry.isLongFilenameEntry(): " + entry.isLongFilenameEntry());
-			System.out.println("entry.getFilenameStatus(): " + entry.getFilenameStatus());
+			//System.out.println("entry.isLongFilenameEntry(): " + entry.isLongFilenameEntry());
+			//System.out.println("entry.getFilenameStatus(): " + entry.getFilenameStatus());
 			
 			
 			
 			if (entry.isLongFilenameEntry())
 			{			
 				Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName((char)entryNumber, entryAddress, fileSystemIO);
-				System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
+				//System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
 			}
 			else
 			{				
@@ -202,16 +201,16 @@ public class Fat16Directory extends FatDirectory {
 			if (filenameStatus == FilenameStatus.entryIsAvailableAndNoSubsequentEntryIsInUse)
 				break;
 			
-			System.out.println("\t entryNumber = : " + entryNumber);
-			System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
+			//System.out.println("\t entryNumber = : " + entryNumber);
+			//System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
 			
-			System.out.println("entry.isLongFilenameEntry(): " + entry.isLongFilenameEntry());
-			System.out.println("entry.getFilenameStatus(): " + entry.getFilenameStatus());
+			//System.out.println("entry.isLongFilenameEntry(): " + entry.isLongFilenameEntry());
+			//System.out.println("entry.getFilenameStatus(): " + entry.getFilenameStatus());
 			
 			if (entry.isLongFilenameEntry())
 			{
 				Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName((char)entryNumber, entryAddress, this.fileSystemIO);
-				System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
+				//System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
 			}
 			else
 			{
@@ -222,37 +221,38 @@ public class Fat16Directory extends FatDirectory {
 				
 				if (isSubdirectory)
 				{
-					System.out.println("isSubdirectory: " + isSubdirectory);
+					//System.out.println("isSubdirectory: " + isSubdirectory);
 					long adr = dataRegion16.getClusterAddress(dosFilename.getStartingClusterNumber());
 					
-					System.out.println("adr: " + adr);
-					System.out.printf("adr: 0x%02Xh\n", adr);
+					//System.out.println("adr: " + adr);
+					//System.out.printf("adr: 0x%02Xh\n", adr);
 					
 					byte temp[] = dataRegion16.getClusterData(adr);
-					for (int i = 0; i < temp.length; i++)
-					{
-						System.out.printf("0x%02Xh ", temp[i]);
-					}
-					System.out.println();
+					//for (int i = 0; i < temp.length; i++)
+					//{
+					//	System.out.printf("0x%02Xh ", temp[i]);
+					//}
+					//System.out.println();
 				}
 				
+				/*
 				byte fileData[] = dosFilename.getData(dataRegion16, fileAllocationTable16);
 				
 				//If not folder
 				if (fileData != null)
 				{
-					System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
-					System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
+					//System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
+					//System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
 					
 					String md5 = Hash.getMd5FromFileData(fileData);
 					System.out.println("MD5 digest(in hex format):: " + md5);
 				}
+				*/
 			}
 		}
 		
 		return arrayListFiles;
 	}
-	
 	
 	public static long calculateRootDirectoryAddress(
 			BootBlock16 bootBlock16) {
@@ -319,7 +319,7 @@ public class Fat16Directory extends FatDirectory {
 	//public long calculateRootDirectoryEntryAddress(char entryNumber, byte buffer[])
 		public long calculateRootDirectoryEntryAddress(char entryNumber)
 		{
-			long entryAddress = (long)rootDirectoryAddress + (long)entryNumber * RootDirectoryEntry.rootDirectoryEntrySize;
+			long entryAddress = (long)rootDirectoryAddress + (long)entryNumber * FatEntry.rootDirectoryEntrySize;
 			
 			//System.out.println("entryAddress: " + entryAddress);
 			//System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
@@ -329,11 +329,39 @@ public class Fat16Directory extends FatDirectory {
 		
 		public long calculateSubDirectoryEntryAddress(long address, char entryNumber)
 		{
-			long entryAddress = (long)address + (long)entryNumber * RootDirectoryEntry.rootDirectoryEntrySize;
+			long entryAddress = (long)address + (long)entryNumber * FatEntry.rootDirectoryEntrySize;
 			
 			//System.out.println("entryAddress: " + entryAddress);
 			//System.out.printf("\t sentryAddress: 0x%02Xh\n", entryAddress);
 			
 			return entryAddress;
+		}
+
+		public BootBlock getBootBlock() {
+			return bootBlock;
+		}
+
+		public FileAllocationTable getFileAllocationTable() {
+			return fileAllocationTable;
+		}
+
+		public DataRegion getDataRegion() {
+			return dataRegion;
+		}
+
+		public long getRootDirectoryAddress() {
+			return rootDirectoryAddress;
+		}
+
+		public char getMaxEntriesInRootDirectory() {
+			return maxEntriesInRootDirectory;
+		}
+
+		public long getRootDirectorySizeInBytes() {
+			return rootDirectorySizeInBytes;
+		}
+
+		public long getRootDirectorySizeInBlocks() {
+			return rootDirectorySizeInBlocks;
 		}
 }

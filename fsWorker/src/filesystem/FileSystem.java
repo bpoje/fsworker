@@ -23,5 +23,7 @@ public abstract class FileSystem {
 	
 	public abstract ArrayList<FatEntry> ls() throws IOException, NotEnoughBytesReadException;
 	public abstract byte [] getData(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
-	public abstract ArrayList<FatEntry> cd(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
+	public abstract boolean cd(FileSystemEntry entry);
+	public abstract void writeToSlack(FileSystemEntry entry, byte [] buffer) throws IOException, NotEnoughBytesReadException;
+	public abstract byte [] readFromSlack(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
 }

@@ -41,4 +41,11 @@ public class FileSystemIO {
 		
 		return buffer;
 	}
+	
+	public void writeFSImage(long position, byte [] buffer) throws IOException
+	{
+		randomAccessFSImage.seek(position);
+		
+		randomAccessFSImage.write(buffer);
+	}
 }

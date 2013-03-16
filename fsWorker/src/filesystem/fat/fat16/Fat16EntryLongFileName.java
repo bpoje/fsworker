@@ -2,9 +2,9 @@ package filesystem.fat.fat16;
 
 import java.io.IOException;
 
-import fat.DataConverter;
 import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.FatEntry;
+import filesystem.io.DataConverter;
 import filesystem.io.FileSystemIO;
 
 public class Fat16EntryLongFileName extends FatEntry {
@@ -23,22 +23,22 @@ public class Fat16EntryLongFileName extends FatEntry {
 		byte buffer[] = fileSystemIO.readFSImage(entryAddress + 0, 1);
 		byte ordinalField = buffer[0];
 
-		System.out.println("ordinalField = : " + ordinalField);
-		System.out.printf("ordinalField: 0x%02Xh\n", ordinalField);
+		//System.out.println("ordinalField = : " + ordinalField);
+		//System.out.printf("ordinalField: 0x%02Xh\n", ordinalField);
 
 		byte LFNNumberByte = (byte) (ordinalField & 0x3F);
 
-		System.out.println("LFNNumberByte = : " + LFNNumberByte);
-		System.out.printf("LFNNumberByte: 0x%02Xh\n", LFNNumberByte);
+		//System.out.println("LFNNumberByte = : " + LFNNumberByte);
+		//System.out.printf("LFNNumberByte: 0x%02Xh\n", LFNNumberByte);
 
 		LFNNumber = DataConverter.getValueFrom1Byte(LFNNumberByte);
 
-		System.out.println("LFNNumber = : " + (int) LFNNumber);
-		System.out.printf("LFNNumber: 0x%02Xh\n", (int) LFNNumber);
+		//System.out.println("LFNNumber = : " + (int) LFNNumber);
+		//System.out.printf("LFNNumber: 0x%02Xh\n", (int) LFNNumber);
 
 		isLast = (ordinalField & 0x40) != 0;
 
-		System.out.println("isLast = : " + isLast);
+		//System.out.println("isLast = : " + isLast);
 	}
 
 	public boolean isLast() {

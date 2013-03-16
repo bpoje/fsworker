@@ -1,10 +1,5 @@
 package main;
 
-import fat.BIOSParameterBlock;
-import fat.DataRegion;
-import fat.FAT12_16;
-import fat.FATType;
-import fat.RootDirectory;
 import filesystem.FileSystemType;
 import filesystem.fat.FatEntry;
 import filesystem.fat.FileSystemFat;
@@ -18,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Formattable;
 
 
 public class Main {
@@ -40,6 +36,9 @@ public class Main {
 			FileSystemIO fileSystemIO = new FileSystemIO(file);
 			FileSystemFat16 fileSystemFAT16 = new FileSystemFat16(file, fileSystemIO);
 			
+			Fat16Entry rembemberDotDotTest = null;
+			Fat16Entry file111 = null;
+			
 			ArrayList<FatEntry> filesInFolder = fileSystemFAT16.ls();
 			for (int i = 0; i < filesInFolder.size(); i++)
 			{
@@ -48,20 +47,82 @@ public class Main {
 				System.out.println("Filename: " + fat16Entry.getFilename());
 				
 				byte [] data = fileSystemFAT16.getData(fat16Entry);
-				System.out.println("Data: " + data);
+				//System.out.println("Data: " + data);
+				
+				if (fat16Entry.getFilename().compareTo("02") == 0)
+				{
+					file111 = fat16Entry;
+				}
 				
 				if (fat16Entry.isSubdirectoryEntry())
 				{
-					ArrayList<FatEntry> success = fileSystemFAT16.cd(fat16Entry);
+					boolean success = fileSystemFAT16.cd(fat16Entry);
 					System.out.println("success: " + success);
+					System.out.println("-------------------------------------------------------------------------");
 					
-					for (int j = 0; j < success.size(); j++)
+					ArrayList<FatEntry> filesInFolder1 = fileSystemFAT16.ls();
+					System.out.println("jsize: " + filesInFolder1.size());
+					for (int j = 0; j < filesInFolder1.size(); j++)
 					{
-						Fat16Entry fat16Entry1 = (Fat16Entry) success.get(j);
-						System.out.println("fat16Entry1: " + fat16Entry1.getFilename());
+						Fat16Entry fat16Entry1 = (Fat16Entry)filesInFolder1.get(j);
+						
+						System.out.println("j: " + j + " " + "Filename1: " + fat16Entry1.getFilename() + " " + fat16Entry1.getFilename().length());
+						
+						if (fat16Entry1.getFilename().compareTo("..") == 0)
+						{
+							rembemberDotDotTest = fat16Entry1;
+						}
+						
+						byte [] data1 = fileSystemFAT16.getData(fat16Entry1);
+						//System.out.println("Data1: " + data1);
+						
+						/*
+						if (fat16Entry.isSubdirectoryEntry())
+						{
+							boolean success1 = fileSystemFAT16.cd(fat16Entry1);
+							System.out.println("success1: " + success1);
+							
+							
+							ArrayList<FatEntry> filesInFolder2 = fileSystemFAT16.ls();
+							
+						}
+						*/
 					}
 				}
+				
 			}
+			
+			System.out.println("rembemberDotDotTest: " + rembemberDotDotTest);
+			System.out.println("rembemberDotDotTest.getFilename(): " + rembemberDotDotTest.getFilename());
+			
+			boolean success = fileSystemFAT16.cd(rembemberDotDotTest);
+			System.out.println("success: " + success);
+			
+			ArrayList<FatEntry> xyx = fileSystemFAT16.ls();
+			System.out.println("xyx.size(): " + xyx.size());
+			for (int i = 0; i < xyx.size(); i++)
+			{
+				Fat16Entry xxx = (Fat16Entry)xyx.get(i);
+				System.out.println("xxx.getFilename(): " + xxx.getFilename());
+			}
+			
+			byte toSlack[] = new byte[1214];
+			
+			for (int i = 0; i < toSlack.length; i++)
+			{
+				toSlack[i] = (byte)0xAA;
+			}
+			
+			fileSystemFAT16.writeToSlack(file111, toSlack);
+			
+			byte [] abcd1234 = fileSystemFAT16.readFromSlack(file111);
+			
+			OutputFormater.printArrayHex(abcd1234, "abcd1234");
+			System.out.println("abcd1234.length: " + abcd1234.length);
+			
+			MainView mainView = new MainView("MainView", fileSystemFAT16);
+			mainView.setVisible(true);
+			
 		}
 		catch (Exception e)
 		{
@@ -69,7 +130,8 @@ public class Main {
 		}
 		//------------
 		
-		if (true)
+		
+		/*if (true)
 			return;
 		
 		try
@@ -111,7 +173,7 @@ public class Main {
 					
 					
 					//AA
-					/*
+					
 					//count of sectors occupied by ONE FAT
 					long sizeOfOneFAT = biosParameterBlock.getFATSz();
 					
@@ -129,10 +191,10 @@ public class Main {
 					long rootDirectoryAddress = (sizeOfOneFAT * (long)numberOfFATs + (long)numberOfReservedSectors) * (long)bytesPerSector;
 					System.out.println("rootDirectoryAddress: " + rootDirectoryAddress);
 					System.out.printf("rootDirectoryAddress: 0x%02Xh\n", rootDirectoryAddress);
-					*/
+					
 					//-AA
 					
-					/*
+					
 					//If a filename is fewer than eight characters in length, it is padded with space characters.
 					String filename = DataConverter.getStringFrom8Bytes(buffer, (int)rootDirectoryAddress + 0);
 					
@@ -211,23 +273,23 @@ public class Main {
 					long filesizeInBytes = DataConverter.getValueFrom4Bytes(buffer, (int)rootDirectoryAddress + 28);
 					
 					System.out.println("filesizeInBytes: " + filesizeInBytes);
-					*/
 					
-					/*
+					
+					
 					//Maximum number of entries in the root directory
 					char maxEntriesInRootDirectory = biosParameterBlock.getBPB_RootEntCnt();
 					
 					//Calculate total space occupied by the root directory
 					final long directoryEntrySize = 32; //bytes
-					*/
-					/*
+					
+					
 					long rootDirectorySizeInBytes = (long)maxEntriesInRootDirectory * directoryEntrySize;
 					long rootDirectorySizeInBlocks = rootDirectorySizeInBytes / (long)bytesPerSector;
 					
 					System.out.println("rootDirectorySizeInBytes: " + rootDirectorySizeInBytes);
 					System.out.println("rootDirectorySizeInKBytes: " + rootDirectorySizeInBytes / 1024);
 					System.out.println("rootDirectorySizeInBlocks: " + rootDirectorySizeInBlocks);
-					*/
+					
 					
 					DataRegion dataRegion = new DataRegion(biosParameterBlock, buffer);
 					FAT12_16 fat12_16 = new FAT12_16(biosParameterBlock, buffer);
@@ -243,7 +305,7 @@ public class Main {
 					
 					
 					
-					/*
+					
 					long address = rootDirectoryAddress + rootDirectorySizeInBytes;
 					
 					System.out.println("address: " + address);
@@ -298,7 +360,7 @@ public class Main {
 						System.out.println("newClusterNumber: " + (int)newClusterNumber);
 						System.out.printf("newClusterNumber: 0x%02Xh\n", (int)newClusterNumber);
 					}
-					*/
+					
 					
 					break;
 					
@@ -312,6 +374,6 @@ public class Main {
 		catch (Exception e)
 		{
 			System.out.println(e);
-		}
+		}*/
 	}
 }

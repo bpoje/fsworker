@@ -3,10 +3,10 @@ package filesystem.fat;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import fat.DataConverter;
 import filesystem.FileSystem;
 import filesystem.FileSystemType;
 import filesystem.exception.NotEnoughBytesReadException;
+import filesystem.io.DataConverter;
 import filesystem.io.FileSystemIO;
 
 public abstract class BootBlock {

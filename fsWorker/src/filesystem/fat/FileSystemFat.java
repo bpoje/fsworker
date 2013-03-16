@@ -4,9 +4,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import fat.DataConverter;
 import filesystem.FileSystem;
 import filesystem.FileSystemType;
+import filesystem.io.DataConverter;
 import filesystem.io.FileSystemIO;
 
 public abstract class FileSystemFat extends FileSystem {
@@ -254,5 +254,13 @@ public abstract class FileSystemFat extends FileSystem {
 
 	public void setFileAllocationTable(FileAllocationTable fileAllocationTable) {
 		this.fileAllocationTable = fileAllocationTable;
+	}
+
+	public FatDirectory getFatDirectory() {
+		return fatDirectory;
+	}
+
+	public DataRegion getDataRegion() {
+		return dataRegion;
 	}
 }
