@@ -102,6 +102,7 @@ public class Fat16Directory extends FatDirectory {
 
 	}
 	
+	/*
 	public ArrayList<FatEntry> directory() throws IOException, NotEnoughBytesReadException
 	{
 		//ArrayList<RootDirectoryEntry> arrayListFiles = new ArrayList<RootDirectoryEntry>();
@@ -161,25 +162,26 @@ public class Fat16Directory extends FatDirectory {
 				//}
 				
 				
-				/*
-				byte fileData[] = dosFilename.getData((DataRegion16)dataRegion, (FileAllocationTable16)fileAllocationTable);
 				
+				//byte fileData[] = dosFilename.getData((DataRegion16)dataRegion, (FileAllocationTable16)fileAllocationTable);
+				//
 				//If not folder
-				if (fileData != null)
-				{
-					System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
-					System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
-					
-					String md5 = Hash.getMd5FromFileData(fileData);
-					System.out.println("MD5 digest(in hex format):: " + md5);
-				}
-				*/
+				//if (fileData != null)
+				//{
+				//	System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
+				//	System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
+				//	
+				//	String md5 = Hash.getMd5FromFileData(fileData);
+				//	System.out.println("MD5 digest(in hex format):: " + md5);
+				//}
+				
 			}
 			
 		}
 		
 		return arrayListFiles;
 	}
+	*/
 	
 	public ArrayList<FatEntry> subDirectory(long address) throws IOException, NotEnoughBytesReadException
 	{
@@ -201,6 +203,9 @@ public class Fat16Directory extends FatDirectory {
 			//bootBlock, fileAllocationTable, dataRegion, 
 			
 			FilenameStatus filenameStatus = entry.getFilenameStatus();
+			
+			System.out.println("filenameStatus: " + filenameStatus);
+			
 			//Break for loop if end-of-list
 			if (filenameStatus == FilenameStatus.entryIsAvailableAndNoSubsequentEntryIsInUse)
 				break;
@@ -211,47 +216,50 @@ public class Fat16Directory extends FatDirectory {
 			//System.out.println("entry.isLongFilenameEntry(): " + entry.isLongFilenameEntry());
 			//System.out.println("entry.getFilenameStatus(): " + entry.getFilenameStatus());
 			
-			if (entry.isLongFilenameEntry())
+			if (filenameStatus != FilenameStatus.entryHasBeenPreviouslyErasedAndIsNotAvailable)
 			{
-				Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO);
-				//System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
-			}
-			else
-			{
-				Fat16Entry dosFilename = new Fat16Entry(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO);
-				boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
-				
-				arrayListFiles.add(dosFilename);
-				
-				if (isSubdirectory)
+				if (entry.isLongFilenameEntry())
 				{
-					//System.out.println("isSubdirectory: " + isSubdirectory);
-					long adr = dataRegion16.getClusterAddress(dosFilename.getStartingClusterNumber());
-					
-					//System.out.println("adr: " + adr);
-					//System.out.printf("adr: 0x%02Xh\n", adr);
-					
-					byte temp[] = dataRegion16.getClusterData(adr);
-					//for (int i = 0; i < temp.length; i++)
-					//{
-					//	System.out.printf("0x%02Xh ", temp[i]);
-					//}
-					//System.out.println();
+					Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO);
+					//System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
 				}
-				
-				/*
-				byte fileData[] = dosFilename.getData(dataRegion16, fileAllocationTable16);
-				
-				//If not folder
-				if (fileData != null)
+				else
 				{
-					//System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
-					//System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
+					Fat16Entry dosFilename = new Fat16Entry(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO);
+					boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
 					
-					String md5 = Hash.getMd5FromFileData(fileData);
-					System.out.println("MD5 digest(in hex format):: " + md5);
+					arrayListFiles.add(dosFilename);
+					
+					if (isSubdirectory)
+					{
+						//System.out.println("isSubdirectory: " + isSubdirectory);
+						long adr = dataRegion16.getClusterAddress(dosFilename.getStartingClusterNumber());
+						
+						//System.out.println("adr: " + adr);
+						//System.out.printf("adr: 0x%02Xh\n", adr);
+						
+						byte temp[] = dataRegion16.getClusterData(adr);
+						//for (int i = 0; i < temp.length; i++)
+						//{
+						//	System.out.printf("0x%02Xh ", temp[i]);
+						//}
+						//System.out.println();
+					}
+					
+					/*
+					byte fileData[] = dosFilename.getData(dataRegion16, fileAllocationTable16);
+					
+					//If not folder
+					if (fileData != null)
+					{
+						//System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
+						//System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
+						
+						String md5 = Hash.getMd5FromFileData(fileData);
+						System.out.println("MD5 digest(in hex format):: " + md5);
+					}
+					*/
 				}
-				*/
 			}
 		}
 		
