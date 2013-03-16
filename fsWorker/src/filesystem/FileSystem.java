@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 import filesystem.exception.NotEnoughBytesReadException;
+import filesystem.fat.FatEntry;
 import filesystem.io.FileSystemIO;
 
 public abstract class FileSystem {
@@ -19,5 +21,7 @@ public abstract class FileSystem {
 		this.fileSystemIO = fileSystemIO;
 	}
 	
-	public abstract void ls() throws IOException, NotEnoughBytesReadException;
+	public abstract ArrayList<FatEntry> ls() throws IOException, NotEnoughBytesReadException;
+	public abstract byte [] getData(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
+	public abstract ArrayList<FatEntry> cd(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
 }

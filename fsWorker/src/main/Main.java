@@ -6,7 +6,9 @@ import fat.FAT12_16;
 import fat.FATType;
 import fat.RootDirectory;
 import filesystem.FileSystemType;
+import filesystem.fat.FatEntry;
 import filesystem.fat.FileSystemFat;
+import filesystem.fat.fat16.Fat16Entry;
 import filesystem.fat.fat16.FileSystemFat16;
 import filesystem.io.FileSystemIO;
 import filesystem.utils.OutputFormater;
@@ -14,6 +16,7 @@ import gui.MainView;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -32,18 +35,33 @@ public class Main {
 			String file = "partition";
 			
 			FileSystemType type = FileSystemFat.getFatType(file);
-			//System.out.println("Volume type: " + type);
+			System.out.println("Volume type: " + type);
 			
 			FileSystemIO fileSystemIO = new FileSystemIO(file);
-			
-			//FileSystemFat16 fileSystemFAT16 = new FileSystemFat16(file);
 			FileSystemFat16 fileSystemFAT16 = new FileSystemFat16(file, fileSystemIO);
 			
-			//byte [] temp = fileSystemFAT16.readFSImage(10, 4);
-			
-			//OutputFormater.printArrayHex(temp, "Temp:");
-			
-			fileSystemFAT16.ls();
+			ArrayList<FatEntry> filesInFolder = fileSystemFAT16.ls();
+			for (int i = 0; i < filesInFolder.size(); i++)
+			{
+				Fat16Entry fat16Entry = (Fat16Entry)filesInFolder.get(i);
+				
+				System.out.println("Filename: " + fat16Entry.getFilename());
+				
+				byte [] data = fileSystemFAT16.getData(fat16Entry);
+				System.out.println("Data: " + data);
+				
+				if (fat16Entry.isSubdirectoryEntry())
+				{
+					ArrayList<FatEntry> success = fileSystemFAT16.cd(fat16Entry);
+					System.out.println("success: " + success);
+					
+					for (int j = 0; j < success.size(); j++)
+					{
+						Fat16Entry fat16Entry1 = (Fat16Entry) success.get(j);
+						System.out.println("fat16Entry1: " + fat16Entry1.getFilename());
+					}
+				}
+			}
 		}
 		catch (Exception e)
 		{

@@ -1,9 +1,12 @@
 package filesystem.fat.fat16;
 
+import hash.Hash;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
 import fat.RootDirectoryEntry;
+import filesystem.FileSystemEntry;
 import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.FatEntry;
 import filesystem.fat.FileSystemFat;
@@ -18,17 +21,80 @@ public class FileSystemFat16 extends FileSystemFat{
 		fileAllocationTable.initFileAllocationTable(bootBlock);
 		dataRegion.initDataRegion(bootBlock);
 		fatDirectory.initFatDirectory(bootBlock, fileAllocationTable, dataRegion);
-		
-		System.out.println("x123y:" + fatDirectory.getFileSystemIO());
 	}
 
-	@Override public void ls() throws IOException, NotEnoughBytesReadException
+	@Override public ArrayList<FatEntry> ls() throws IOException, NotEnoughBytesReadException
 	{
 		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
 		Fat16Directory fat16Directory = (Fat16Directory)fatDirectory;
 		
 		ArrayList<FatEntry> filesInFolder = fat16Directory.directory();
+		
+		//System.out.println(filesInFolder.size());
+		
+		return filesInFolder;
 	}
+
+	@Override
+	public byte [] getData(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException {
+		if (entry == null)
+			return null;
+		
+		Fat16Entry dosFilename = (Fat16Entry)entry;
+		
+		if (dosFilename.isLongFilenameEntry() || dosFilename.isSubdirectoryEntry())
+			return null;
+		
+		byte fileData[] = dosFilename.getData((DataRegion16)dataRegion, (FileAllocationTable16)fileAllocationTable);
+		
+		//If not folder
+		if (fileData != null)
+		{
+			System.out.println("\t\t\t\t\t\t\t\tfileData.length: " + (fileData.length));
+			System.out.println("\t\t\t\t\t\t\t\tdosFilename.getFilesizeInBytes(): " + dosFilename.getFilesizeInBytes());
+			
+			String md5 = Hash.getMd5FromFileData(fileData);
+			System.out.println("MD5 digest(in hex format):: " + md5);
+		}
+		
+		return fileData;
+	}
+	
+	//Returns true if successful
+	@Override
+	public ArrayList<FatEntry> cd(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException {
+		if (entry == null)
+			return null;
+		
+		Fat16Entry dosFilename = (Fat16Entry)entry;
+		DataRegion16 dataRegion16 = (DataRegion16)dataRegion;
+		
+		if (!dosFilename.isSubdirectoryEntry())
+			return null;
+		
+		System.out.println("isSubdirectoryEntry: " + dosFilename.isSubdirectoryEntry());
+			long adr = dataRegion16.getClusterAddress(dosFilename.getStartingClusterNumber());
+			
+			System.out.println("adr: " + adr);
+			System.out.printf("adr: 0x%02Xh\n", adr);
+			
+			byte temp[] = dataRegion16.getClusterData(adr);
+			for (int i = 0; i < temp.length; i++)
+			{
+				System.out.printf("0x%02Xh ", temp[i]);
+			}
+			System.out.println();
+			
+			
+			System.out.println("---------------------------------------------------------");
+			Fat16Directory fat16Directory = (Fat16Directory)fatDirectory;
+			ArrayList<FatEntry> list = fat16Directory.subDirectory(adr);
+			System.out.println("---------------------------------------------------------");
+		
+		return list;
+	}
+	
+	
 	
 	/*
 	private void scanFileSystem(ArrayList<RootDirectoryEntry> files, DefaultMutableTreeNode treeNode)

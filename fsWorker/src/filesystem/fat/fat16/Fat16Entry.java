@@ -250,7 +250,7 @@ public class Fat16Entry extends FatEntry {
 			return null;
 		
 		char clusterNumber = startingClusterNumber;
-		System.out.println("\t\t\tclusterNumber: " + (int) clusterNumber);
+		//System.out.println("\t\t\tclusterNumber: " + (int) clusterNumber);
 		
 		long bytesPerCluster = dataRegion16.getBytesPerCluster();
 		
@@ -258,27 +258,24 @@ public class Fat16Entry extends FatEntry {
 		long clustersNeeded = (long) Math.ceil((float) filesizeInBytes
 				/ (float) bytesPerCluster);
 		
-		System.out.println("filesizeInBytes: " + filesizeInBytes);
-		System.out.println("bytesPerCluster: " + bytesPerCluster);
-		System.out.println("clustersNeeded: " + clustersNeeded);
+		//System.out.println("filesizeInBytes: " + filesizeInBytes);
+		//System.out.println("bytesPerCluster: " + bytesPerCluster);
+		//System.out.println("clustersNeeded: " + clustersNeeded);
 
 		byte fileData[] = new byte[(int) (filesizeInBytes)];
-		System.out.println("fileData.length: " + fileData.length);
+		//System.out.println("fileData.length: " + fileData.length);
 		int clusterCounter = 0;
 
 		// while (remainingDataBytes > 0)
 		while ((int) clusterNumber != (int) 0xFFFF) {
 			long address = dataRegion16.getClusterAddress(clusterNumber);
 
-			System.out.println("address: " + address);
-			System.out.printf("address: 0x%02Xh\n", address);
+			//System.out.println("address: " + address);
+			//System.out.printf("address: 0x%02Xh\n", address);
 
 			byte cluster[] = dataRegion16.getClusterData(address);
 
-			// remainingDataBytes -= bytesPerCluster;
-
 			// Copy cluster to fileData array
-			// for (int i=0; i < cluster.length; i++)
 			for (int i = 0; i < cluster.length
 					&& (int) (clusterCounter * bytesPerCluster) + i < fileData.length; i++) {
 				fileData[(int) (clusterCounter * bytesPerCluster) + i] = cluster[i];
@@ -292,27 +289,15 @@ public class Fat16Entry extends FatEntry {
 			long fatPointerAddress = fileAllocationTable16
 					.getFATPointerAddress(clusterNumber);
 
-			System.out.println("fatPointerAddress: " + (int) fatPointerAddress);
-			System.out.printf("fatPointerAddress: 0x%02Xh\n",
-					(int) fatPointerAddress);
+			//System.out.println("fatPointerAddress: " + (int) fatPointerAddress);
+			//System.out.printf("fatPointerAddress: 0x%02Xh\n",
+			//		(int) fatPointerAddress);
 
 			clusterNumber = fileAllocationTable16.getFATPointerValue(fatPointerAddress);
 
-			System.out.println("clusterNumber: " + (int) clusterNumber);
-			System.out.printf("clusterNumber: 0x%02Xh\n", (int) clusterNumber);
+			//System.out.println("clusterNumber: " + (int) clusterNumber);
+			//System.out.printf("clusterNumber: 0x%02Xh\n", (int) clusterNumber);
 		}
-		// -------------------------------------------------
-		/*
-		 * address = dataRegion.getClusterAddress(newClusterNumber);
-		 * 
-		 * System.out.println("address: " + address);
-		 * System.out.printf("address: 0x%02Xh\n", address);
-		 * 
-		 * cluster = dataRegion.getClusterData(address);
-		 * 
-		 * for (int i=0; i < cluster.length; i++) {
-		 * System.out.printf("0x%02Xh ", cluster[i]); } System.out.println();
-		 */
 
 		return fileData;
 	}

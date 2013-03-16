@@ -55,7 +55,7 @@ public class DataRegion16 extends DataRegion {
 		//byte cluster [] = Arrays.copyOfRange(buffer, (int)address, (int)address + (int)bytesPerCluster);
 		byte cluster [] = fileSystemIO.readFSImage(address, (int)bytesPerCluster);
 		
-		System.out.printf("from address: 0x%02Xh to including address: 0x%02Xh\n", (int)address, (int)address + (int)bytesPerCluster - 1);
+		//System.out.printf("from address: 0x%02Xh to including address: 0x%02Xh\n", (int)address, (int)address + (int)bytesPerCluster - 1);
 		return cluster;
 	}
 
