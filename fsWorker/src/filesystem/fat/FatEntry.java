@@ -31,20 +31,12 @@ public class FatEntry extends FileSystemEntry {
 	public static final long rootDirectoryEntrySize = 32; // bytes
 
 	public FatEntry(char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
-		System.out.println("y0: fileSystemIO: " + fileSystemIO);
-		
 		this.entryNumber = entryNumber;
 		this.entryAddress = entryAddress;
 		this.fileSystemIO = fileSystemIO;
 		
-		System.out.println("y1: fileSystemIO: " + fileSystemIO);
-		
 		decodeAttributes();
-		
-		System.out.println("y2:");
-		
 		decodeFilenameStatus();
-
 	}
 
 	public void decodeFilenameStatus() throws IOException, NotEnoughBytesReadException {
@@ -98,16 +90,12 @@ public class FatEntry extends FileSystemEntry {
 	public void decodeAttributes() throws IOException, NotEnoughBytesReadException {
 		// System.out.println("entryAddress: " + entryAddress);
 		// System.out.printf("entryAddress: 0x%02Xh\n", entryAddress);
-
-		System.out.println("c1: entryAddress: " + entryAddress);
 		
 		// File atributes
 		//char fileAttributes = DataConverter.getValueFrom1Byte(buffer,
 		//		(int) entryAddress + 11);
 		byte buffer[] = fileSystemIO.readFSImage(entryAddress + 11, 1);
 		char fileAttributes = DataConverter.getValueFrom1Byte(buffer,0);
-
-		System.out.println("c2:");
 		
 		// System.out.println("fileAttributes: " + (int)fileAttributes);
 		// System.out.printf("fileAttributes: 0x%02Xh\n", (int)fileAttributes);

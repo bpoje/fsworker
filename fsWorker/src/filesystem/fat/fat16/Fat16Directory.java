@@ -128,9 +128,7 @@ public class Fat16Directory extends FatDirectory {
 			
 			
 			if (entry.isLongFilenameEntry())
-			{
-				System.out.println("c1d1");
-				
+			{			
 				Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName((char)entryNumber, entryAddress, fileSystemIO);
 				System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
 			}
@@ -163,7 +161,7 @@ public class Fat16Directory extends FatDirectory {
 				//}
 				
 				
-				/*
+				
 				byte fileData[] = dosFilename.getData((DataRegion16)dataRegion, (FileAllocationTable16)fileAllocationTable);
 				
 				//If not folder
@@ -175,7 +173,7 @@ public class Fat16Directory extends FatDirectory {
 					String md5 = Hash.getMd5FromFileData(fileData);
 					System.out.println("MD5 digest(in hex format):: " + md5);
 				}
-				*/
+				
 			}
 			
 		}

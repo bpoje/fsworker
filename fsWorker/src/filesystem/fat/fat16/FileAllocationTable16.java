@@ -54,8 +54,8 @@ public class FileAllocationTable16 extends FileAllocationTable {
 		// System.out.printf("xFAT2Address: 0x%02Xh\n", FAT2Address);
 
 		for (int i = 0; i < (int) numberOfFATs; i++) {
-			long address = (i * sizeOfOneFAT + (long) numberOfReservedSectors)
-					* (long) bytesPerSector;
+			long address = (i * sizeOfOneFAT + (long) numberOfReservedSectors) * (long) bytesPerSector;
+			System.out.println("address123: " + address + "," + " i: " + i + ", " + "sizeOfOneFAT: " + sizeOfOneFAT);
 			FATAddresses.add(new Long(address));
 		}
 

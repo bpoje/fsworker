@@ -79,7 +79,7 @@ public class BootBlock16 extends BootBlock {
 
 		// long FATSz;
 		//if (BPB_FATSz16 != 0)
-		long FATSz = BPB_FATSz16;
+		FATSz = BPB_FATSz16;
 		//else
 		//	FATSz = BPB_FATSz32;
 
@@ -124,6 +124,8 @@ public class BootBlock16 extends BootBlock {
 		// will not handle them correctly because they will think the volume has
 		// a different type of FAT than
 		// what you think it does.
+		
+		System.out.println("FATSz 123: " + FATSz);
 	}
 
 	public long getNumberOfDataSectors() {
