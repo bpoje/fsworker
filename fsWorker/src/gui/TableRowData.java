@@ -3,6 +3,7 @@ package gui;
 public class TableRowData {
 	private String filename = null;
 	private String filenameExtension;
+	private String longFilename;
 	private String startingClusterNumber;
 	private String filesizeInBytes;
 	private String totalClustersNeededForData;
@@ -11,24 +12,16 @@ public class TableRowData {
 	private String md5OfData;
 	private String md5OfFileSlack;
 	private boolean isRoot;
-
-	/**
-	 * Created on: Feb 23, 2008
-	 * 
-	 * @Author: sandarenu
-	 * @param source
-	 * @param client
-	 * @param spouse
-	 * @param family
-	 * @param isRoot
-	 */
+	
 	public TableRowData(String filename, String filenameExtension,
+			String longFilename,
 			String startingClusterNumber, String filesizeInBytes,
 			String totalClustersNeededForData,
 			String totalAllocatedSizeInBytes, String fileSlackSizeInBytes,
 			String md5OfData, String md5OfFileSlack, boolean isLeaf) {
 		this.filename = filename;
 		this.filenameExtension = filenameExtension;
+		this.longFilename = longFilename;
 		this.startingClusterNumber = startingClusterNumber;
 		this.filesizeInBytes = filesizeInBytes;
 		this.totalClustersNeededForData = totalClustersNeededForData;
@@ -152,5 +145,11 @@ public class TableRowData {
 
 	public void setMd5OfFileSlack(String md5OfFileSlack) {
 		this.md5OfFileSlack = md5OfFileSlack;
+	}
+	public String getLongFilename() {
+		return longFilename;
+	}
+	public void setLongFilename(String longFilename) {
+		this.longFilename = longFilename;
 	}
 }

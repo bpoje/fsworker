@@ -190,6 +190,9 @@ public class Fat16Directory extends FatDirectory {
 		
 		ArrayList<FatEntry> arrayListFiles = new ArrayList<FatEntry>();
 		
+		//VFAT: We need to concatenate long file name entries to get long file name
+		ArrayList<Fat16EntryLongFileName> lfnEntryList = new ArrayList<Fat16EntryLongFileName>();
+		
 		for (int entryNumber = 0; entryNumber < (int)maxEntriesInRootDirectory; entryNumber++)
 		{
 			//long entryAddress = calculateRootDirectoryEntryAddress((char)entryNumber, buffer);
@@ -204,7 +207,7 @@ public class Fat16Directory extends FatDirectory {
 			
 			FilenameStatus filenameStatus = entry.getFilenameStatus();
 			
-			System.out.println("filenameStatus: " + filenameStatus);
+			//System.out.println("filenameStatus: " + filenameStatus);
 			
 			//Break for loop if end-of-list
 			if (filenameStatus == FilenameStatus.entryIsAvailableAndNoSubsequentEntryIsInUse)
@@ -222,11 +225,64 @@ public class Fat16Directory extends FatDirectory {
 				{
 					Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO);
 					//System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
+					
+					//Add long file name entry to arraylist
+					lfnEntryList.add(longFileNameEntry);
+					
+					char lfnNumber = longFileNameEntry.getLFNNumber();
+					boolean lfnLast = longFileNameEntry.isLast();
+					System.out.println("lfnNumber: " + (int)lfnNumber + ", lfnLast: " + lfnLast);
 				}
 				else
 				{
 					Fat16Entry dosFilename = new Fat16Entry(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO);
 					boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
+					
+					//----------------------------------------------------------------
+					//VFAT
+					System.out.println("lfnEntryList.size(): " + lfnEntryList.size() + " " + dosFilename.getFilename());
+					
+					//Depending on the length of the long filename, the system will create a number of
+					//invalid 8.3 entries in the Directory Table, these are the LFN (Long Filename)
+					//entries. These LFN entries are stored with the with the last LFN entry topmost,
+					//and the first LFN entry just above a valid Directory Entry.
+					//
+					//					Directory Example
+					//	Entry Nr. 	Without LFN Entries 	With LFN Entries
+					//	...			...						...
+					//	n			Normal 1				Normal 1
+					//	n+1			Normal 2				LFN for Normal 2 - Part 3
+					//	n+2			Normal 3				LFN for Normal 2 - Part 2
+					//	n+3			Normal 4				LFN for Normal 2 - Part 1
+					//	n+4			Normal 5				Normal 2
+					//	n+5			Normal 6				Normal 3
+					//	...			...						...
+					
+					//There were no LFN Entries before this 8.3 entry => no long file name exists
+					//Directory . and .. have none. When VFAT is used even very short names like
+					//"1.txt" use LFN Entries to store the LongFileName (in this example the
+					//same name is stored in 8.3 entry since "1.txt" fits into max 8byte field)
+					if (lfnEntryList.size() <= 0)
+					{
+						//Directory . and .. have none
+						dosFilename.setLongFileName(dosFilename.getFilename());
+					}
+					//long file name exists
+					else
+					{
+						String longFileName = "";
+						for (int i = lfnEntryList.size() - 1; i >= 0; i--)
+						{
+							longFileName += lfnEntryList.get(i).getUnicodeString();
+						}
+						System.out.println("longFileName: " + longFileName);
+						
+						dosFilename.setLongFileName(longFileName);
+					}
+					
+					//All LFN Entries so far belong to this 8.3 entry => clear the arraylist to start anew
+					lfnEntryList.clear();
+					//------------------------------------------------------------------
 					
 					arrayListFiles.add(dosFilename);
 					

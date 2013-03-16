@@ -134,7 +134,25 @@ public class FatEntry extends FileSystemEntry {
 		// user, but is always set when the file is modified. It is used by
 		// backup programs.
 		isArchiveFlag = (fileAttributes & (0x01 << 5)) != 0;
+		
+		//VFAT long file names
+		//VFAT Long File Names (LFN) are stored on a FAT file system using a
+		//trick—adding (possibly multiple) additional entries into the directory
+		//before the normal file entry. The additional entries are marked with
+		//the Volume Label, System, Hidden, and Read Only attributes (yielding 0x0F),
+		//which is a combination that is not expected in the MS-DOS environment,
+		//and therefore ignored by MS-DOS programs and third-party utilities.
+		//Notably, a directory containing only volume labels is considered as empty
+		//and is allowed to be deleted; such a situation appears if files created with
+		//long names are deleted from plain DOS. This method is very similar to the
+		//DELWATCH method to utilize the volume attribute to hide pending delete files
+		//for possible future undeletion since DR DOS 6.0 (1991) and higher.
 
+		//Because older versions of DOS could mistake LFN names in the root directory
+		//for the volume label, VFAT was designed to create a blank volume label in the
+		//root directory before adding any LFN name entires (if a volume label did not
+		//already exist).
+		
 		// An attribute value of 0x0F is used to designate a long filename
 		// entry.
 		isLongFilenameEntry = (fileAttributes == 0x0F);

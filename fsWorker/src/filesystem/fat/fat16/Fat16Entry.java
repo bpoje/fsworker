@@ -15,13 +15,35 @@ import filesystem.io.DataTransfer;
 import filesystem.io.FileSystemIO;
 import filesystem.utils.OutputFormater;
 
+//http://en.wikipedia.org/wiki/8.3_filename
+
 public class Fat16Entry extends FatEntry {
+	//8.3 filename
+	//An 8.3 filename[1] (also called a short filename or SFN)
+	//is a filename convention used by old versions of DOS, versions
+	//of Microsoft Windows prior to Windows 95, and Windows NT 3.51.
+	//It is also used in modern Microsoft operating systems as an
+	//alternate filename to the long filename for compatibility with
+	//legacy programs.
+	
+	//8.3 filenames have at most eight characters, optionally
+	//followed by a period "." and a filename extension of at most
+	//three characters. For files with no extension, the "." if
+	//present has no significance (that is "myfile" and "myfile."
+	//are equivalent). File and directory names are uppercase,
+	//although systems that use the 8.3 standard are usually
+	//case-insensitive.
+	
 	private String filename;
 	private String filenameExtension;
+	
+	
 	// private char fileAttributes;
 	private char startingClusterNumber;
 	private long filesizeInBytes;
 
+	private String longFileName; //LFN (VFAT)
+	
 	/*
 	 * boolean isReadOnlyFile; boolean isHiddenFile; boolean isSystemFile;
 	 * boolean isSpecialEntry; boolean isSubdirectoryEntry; boolean
@@ -30,7 +52,9 @@ public class Fat16Entry extends FatEntry {
 
 	public Fat16Entry(BootBlock bootBlock, FileAllocationTable fileAllocationTable, DataRegion dataRegion, char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
 		super(bootBlock, fileAllocationTable, dataRegion, entryNumber, entryAddress, fileSystemIO);
-
+		
+		this.longFileName = ""; //Init LFN
+		
 		/*
 		 * long entryAddress = (long)rootDirAddress + (long)entryNumber *
 		 * RootDirectoryEntry.rootDirectoryEntrySize;
@@ -186,7 +210,14 @@ public class Fat16Entry extends FatEntry {
 		//System.out.println("filesizeInBytes: " + filesizeInBytes);
 
 	}
-
+	
+	//public void ()
+	//{
+	//	//Init LFN
+	//	this.longFileName = "";
+	//	isUsingLongFileName = false;
+	//}
+	
 	public long getTotalClustersNeededForData() {
 		long bytesPerCluster = ((DataRegion16)dataRegion).getBytesPerCluster();
 		long clustersNeeded = (long) Math.ceil((float) filesizeInBytes
@@ -387,5 +418,13 @@ public class Fat16Entry extends FatEntry {
 
 	public long getFilesizeInBytes() {
 		return filesizeInBytes;
+	}
+
+	public String getLongFileName() {
+		return longFileName;
+	}
+
+	public void setLongFileName(String longFileName) {
+		this.longFileName = longFileName;
 	}
 }
