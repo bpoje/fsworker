@@ -27,12 +27,12 @@ public class FileSystemFat16 extends FileSystemFat{
 		
 		this.currentDirectoryAddress = ((Fat16Directory)fatDirectory).getRootDirectoryAddress();
 		
-		System.out.println("End of Fat16 init!\n");
+		System.out.println("End of Fat16 init => OK\n");
 	}
 
 	@Override public ArrayList<FatEntry> ls() throws IOException, NotEnoughBytesReadException
 	{
-		System.out.printf("LS currentDirectoryAddress: 0x%02Xh\n", currentDirectoryAddress);
+		//System.out.printf("LS currentDirectoryAddress: 0x%02Xh\n", currentDirectoryAddress);
 		
 		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
 		Fat16Directory fat16Directory = (Fat16Directory)fatDirectory;
@@ -93,7 +93,7 @@ public class FileSystemFat16 extends FileSystemFat{
 			System.out.println("---------------------------------------------------------");
 		*/
 		
-		System.out.printf("BEFORE currentDirectoryAddress: 0x%02Xh\n", currentDirectoryAddress);
+		//System.out.printf("BEFORE currentDirectoryAddress: 0x%02Xh\n", currentDirectoryAddress);
 		
 		//System.out.println("isSubdirectoryEntry: " + dosFilename.isSubdirectoryEntry());
 		
@@ -137,7 +137,7 @@ public class FileSystemFat16 extends FileSystemFat{
 			this.currentDirectoryAddress = dataRegion16.getClusterAddress(dosFilename.getStartingClusterNumber());
 		}
 		
-		System.out.printf("AFTER currentDirectoryAddress: 0x%02Xh\n", currentDirectoryAddress);
+		//System.out.printf("AFTER currentDirectoryAddress: 0x%02Xh\n", currentDirectoryAddress);
 		
 		//System.out.println("adr: " + currentDirectoryAddress);
 		//System.out.printf("adr: 0x%02Xh\n", currentDirectoryAddress);

@@ -6,6 +6,7 @@ import filesystem.fat.FileSystemFat;
 import filesystem.fat.fat16.DataRegion16;
 import filesystem.fat.fat16.Fat16Entry;
 import filesystem.fat.fat16.FileSystemFat16;
+import filesystem.hash.Hash;
 import filesystem.io.DataTransfer;
 import filesystem.io.FileSystemIO;
 import filesystem.utils.OutputFormater;
@@ -16,6 +17,7 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Formattable;
+import java.util.Random;
 
 
 public class Main {
@@ -27,110 +29,126 @@ public class Main {
 			return;
 		}
 		
-		//------------
 		try
 		{
-			String file = "partition";
-			
-			FileSystemType type = FileSystemFat.getFatType(file);
+			String filename = args[0];
+			//-----------------------------------------------------------------------------
+			//Get file system type
+			FileSystemType type = FileSystemFat.getFatType(filename);
 			System.out.println("Volume type: " + type);
 			
-			FileSystemIO fileSystemIO = new FileSystemIO(file);
-			FileSystemFat16 fileSystemFAT16 = new FileSystemFat16(file, fileSystemIO);
-			
-			Fat16Entry rembemberDotDotTest = null;
-			Fat16Entry file111 = null;
-			
-			ArrayList<FatEntry> filesInFolder = fileSystemFAT16.ls();
-			for (int i = 0; i < filesInFolder.size(); i++)
+			//Exit if file system is not supported
+			if (type != FileSystemType.FAT16)
 			{
-				Fat16Entry fat16Entry = (Fat16Entry)filesInFolder.get(i);
+				System.out.println("Unsuported file system! Exiting.");
+				return;
+			}
+			
+			//Create instances of filesystem and its filesystemio class
+			FileSystemIO fileSystemIO = new FileSystemIO(filename);
+			FileSystemFat16 fileSystemFAT16 = new FileSystemFat16(filename, fileSystemIO);
+			//-----------------------------------------------------------------------------
+			
+			//EXAMPLE
+			//A pointer to directory entry
+			Fat16Entry directory = null;
+			
+			//Get the contents of the first (root) directory
+			System.out.println("(ls /)");
+			ArrayList<FatEntry> filesInDirectory = fileSystemFAT16.ls();
+			
+			//For all files/directories in the first (root) directory
+			for (int i = 0; i < filesInDirectory.size(); i++)
+			{
+				Fat16Entry fat16Entry = (Fat16Entry)filesInDirectory.get(i);
 				
-				System.out.println("Filename: " + fat16Entry.getFilename());
-				
-				DataTransfer dtData = fileSystemFAT16.getData(fat16Entry);
-				System.out.println("dtData: " + dtData);
-				byte [] data = dtData.getPayload();
-				System.out.println("dtData.getMd5(): " + dtData.getMd5());
-				//System.out.println("Data: " + data);
-				
-				if (fat16Entry.getFilename().compareTo("02") == 0)
+				//Is file
+				if(!fat16Entry.isSubdirectoryEntry())
 				{
-					file111 = fat16Entry;
-				}
-				
-				if (fat16Entry.isSubdirectoryEntry())
-				{
-					boolean success = fileSystemFAT16.cd(fat16Entry);
-					System.out.println("success: " + success);
-					System.out.println("-------------------------------------------------------------------------");
+					System.out.println("Filename: " + fat16Entry.getFilename() + "." + fat16Entry.getFilenameExtension());
 					
-					ArrayList<FatEntry> filesInFolder1 = fileSystemFAT16.ls();
-					System.out.println("jsize: " + filesInFolder1.size());
-					for (int j = 0; j < filesInFolder1.size(); j++)
-					{
-						Fat16Entry fat16Entry1 = (Fat16Entry)filesInFolder1.get(j);
-						
-						System.out.println("j: " + j + " " + "Filename1: " + fat16Entry1.getFilename() + " " + fat16Entry1.getFilename().length());
-						
-						if (fat16Entry1.getFilename().compareTo("..") == 0)
-						{
-							rembemberDotDotTest = fat16Entry1;
-						}
-						
-						//byte [] data1 = fileSystemFAT16.getData(fat16Entry1).getPayload();
-						//System.out.println("Data1: " + data1);
-						
-						/*
-						if (fat16Entry.isSubdirectoryEntry())
-						{
-							boolean success1 = fileSystemFAT16.cd(fat16Entry1);
-							System.out.println("success1: " + success1);
-							
-							
-							ArrayList<FatEntry> filesInFolder2 = fileSystemFAT16.ls();
-							
-						}
-						*/
-					}
+					//Read file data
+					DataTransfer fileData = fat16Entry.getData();
+					System.out.println("---: data length in bytes: " + fileData.getPayload().length + ", md5: " + fileData.getMd5());
+					
+					//Read file slack
+					DataTransfer fileSlack = fat16Entry.readFromFileSlack();
+					System.out.println("---: file slack length in bytes: " + fileSlack.getPayload().length + ", md5: " + fileSlack.getMd5());
+					
+					//Display entire file slack as sequence of bytes
+					OutputFormater.printArrayHex(fileSlack.getPayload(), "File slack bytes:", "---: ");
+					
+					//Fill table with data we want to hide
+					byte dataIWantToHide[] = new byte[(int)fat16Entry.getFileSlackSizeInBytes()];
+					for (int j = 0; j < dataIWantToHide.length; j++)
+						dataIWantToHide[j] = (byte)0xAA;
+					
+					//Display table that contains the data we are trying to hide
+					OutputFormater.printArrayHex(dataIWantToHide, "Data i'm trying to hide:", "---: ");
+					
+					//Get md5 from secret data
+					String md5DataIWantToHide = Hash.getMd5FromByteArray(dataIWantToHide);
+					
+					//Write secret data to file slack
+					fat16Entry.writeToFileSlack(dataIWantToHide);
+					System.out.println("---: Secret data writen to file slack");
+					
+					//Read file slack to test if write was successful
+					DataTransfer testFileSlack = fat16Entry.readFromFileSlack();
+					String testReadMd5 = testFileSlack.getMd5();
+					
+					if (md5DataIWantToHide.compareToIgnoreCase(testReadMd5) != 0)
+						System.out.println("---: HASH NOT EQUAL! WRITE TO FILE SLACK FAILED!");
+					else
+						System.out.println("---: Write OK!");
+					
+					//Display file slack
+					OutputFormater.printArrayHex(testFileSlack.getPayload(), "Data that was read from file slack:","---: ");
+					
+					System.out.println();
 				}
+				//Is folder
+				else
+				{
+					System.out.println("Directory: " + fat16Entry.getFilename());
+					
+					//Remember the directory we just found
+					directory = fat16Entry;
+				}
+			}
+			
+			//If some directory was found open it
+			if (directory != null)
+			{
+				System.out.println("(cd " + directory.getFilename() + ")");
+				fileSystemFAT16.cd(directory);
+			}
+			
+			//Get the contents of the directory
+			System.out.println("(ls)");
+			filesInDirectory = fileSystemFAT16.ls();
+			
+			//For all files/directories in the directory
+			for (int i = 0; i < filesInDirectory.size(); i++)
+			{
+				Fat16Entry fat16Entry = (Fat16Entry)filesInDirectory.get(i);
 				
+				//Is file
+				if(!fat16Entry.isSubdirectoryEntry())
+				{
+					System.out.println("\tFilename: " + fat16Entry.getFilename() + "." + fat16Entry.getFilenameExtension());
+				}
+				//Is folder
+				else
+				{
+					System.out.println("\tDirectory: " + fat16Entry.getFilename());
+				}
 			}
 			
-			System.out.println("rembemberDotDotTest: " + rembemberDotDotTest);
-			System.out.println("rembemberDotDotTest.getFilename(): " + rembemberDotDotTest.getFilename());
 			
-			boolean success = fileSystemFAT16.cd(rembemberDotDotTest);
-			System.out.println("success: " + success);
-			
-			ArrayList<FatEntry> xyx = fileSystemFAT16.ls();
-			System.out.println("xyx.size(): " + xyx.size());
-			for (int i = 0; i < xyx.size(); i++)
-			{
-				Fat16Entry xxx = (Fat16Entry)xyx.get(i);
-				System.out.println("xxx.getFilename(): " + xxx.getFilename());
-			}
-			
-			System.out.println("getFileSlackSizeInBytes(DataRegion16 dataRegion16): ");
-			
-			byte toSlack[] = new byte[1214];
-			
-			for (int i = 0; i < toSlack.length; i++)
-			{
-				toSlack[i] = (byte)0xAA;
-			}
-			
-			fileSystemFAT16.writeToSlack(file111, toSlack);
-			
-			DataTransfer dTabcd1234 = fileSystemFAT16.readFromSlack(file111);
-			byte [] abcd1234 = dTabcd1234.getPayload();
-			System.out.println("dTabcd1234.getMd5(): " + dTabcd1234.getMd5());
-			
-			OutputFormater.printArrayHex(abcd1234, "abcd1234:");
-			System.out.println("abcd1234.length: " + abcd1234.length);
-			
-			MainView mainView = new MainView("MainView", fileSystemFAT16);
-			mainView.setVisible(true);
+			//Open GUI
+			//MainView mainView = new MainView("MainView", fileSystemFAT16);
+			//mainView.setVisible(true);
 			
 		}
 		catch (Exception e)
