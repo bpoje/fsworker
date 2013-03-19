@@ -1,1 +1,24 @@
-fsWorker/bin
+fsWorker/*.pydevproject
+fsWorker/.metadata
+fsWorker/bin/**
+fsWorker/tmp/**
+fsWorker/tmp/**/*
+fsWorker/*.tmp
+fsWorker/*.bak
+fsWorker/*.swp
+fsWorker/*~.nib
+fsWorker/local.properties
+fsWorker/.settings/
+fsWorker/.loadpath
+
+# External tool builders
+fsWorker/.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+fsWorker/*.launch
+
+# CDT-specific
+fsWorker/.cproject
+
+# PDT-specific
+fsWorker/.buildpath
