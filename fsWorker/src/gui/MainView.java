@@ -193,7 +193,7 @@ public class MainView extends JFrame {
 			
 			totalSlackFileSizeInBytes += fileSlackSizeInBytes;
 			
-			String sStartingClusterNumber = formatOutput((long)startingClusterNumber);
+			String sStartingClusterNumber = Long.toString((long)startingClusterNumber);
 			String sFilesizeInBytes = formatOutput(filesizeInBytes);
 			String sTotalClustersNeededForData = Long.toString(totalClustersNeededForData);
 			String sTotalAllocatedSizeInBytes = formatOutput(totalAllocatedSizeInBytes);
