@@ -105,7 +105,7 @@ public abstract class FileSystemFat extends FileSystem {
 		// BPB_TotSec16
 		char BPB_TotSec16 = DataConverter.getValueFrom2Bytes(buffer, 19);
 		System.out.println("BPB_TotSec16: " + (int) BPB_TotSec16);
-
+		
 		// BPB_Media
 		char BPB_Media = DataConverter.getValueFrom1Byte(buffer, 21);
 		System.out.println("BPB_Media: " + (int) BPB_Media);
@@ -160,7 +160,7 @@ public abstract class FileSystemFat extends FileSystem {
 			BPB_FATSz32 = DataConverter.getValueFrom4Bytes(buffer, 0);
 			System.out.println("BPB_FATSz32: " + BPB_FATSz32);
 		}
-
+		
 		// FAT Type Determination
 		// The FAT type —one of FAT12, FAT16, or FAT32— is determined by the
 		// count of clusters on the volume and nothing else.

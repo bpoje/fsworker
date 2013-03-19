@@ -27,20 +27,20 @@ public abstract class BootBlock {
 	protected long BPB_TotSec32;
 
 	// number of sectors in data region
-	//long numberOfDataSectors;
+	protected long numberOfDataSectors;
 
 	// number of clusters in data region
-	//private long CountofClustersInDataRegion;
+	protected long CountofClustersInDataRegion;
 
-	//private FileSystemType type;
+	protected FileSystemType type;
 
 	// count of sectors occupied by ONE FAT
-	//private long FATSz;
+	protected long FATSz;
 
 	// FAT12 or FAT16
 
 	// FAT32
-	//private long BPB_FATSz32;
+	protected long BPB_FATSz32;
 
 	public BootBlock(FileSystemIO fileSystemIO) throws IOException,
 			NotEnoughBytesReadException {
@@ -59,15 +59,17 @@ public abstract class BootBlock {
 		
 		
 		
-		/*
+		
 		// FAT12 or FAT16
 		if (BPB_FATSz16 != 0) {
-			buffer = new byte[26];
-			fs.read(buffer);
+			//buffer = new byte[26];
+			//fs.read(buffer);
+			buffer = fileSystemIO.readFSImage(36, 26);
 		} else // FAT32
 		{
-			buffer = new byte[54];
-			fs.read(buffer);
+			//buffer = new byte[54];
+			//fs.read(buffer);
+			buffer = fileSystemIO.readFSImage(36, 54);
 
 			// BPB_FATSz32
 			// This field is only defined for FAT32 media and does not exist on
@@ -148,7 +150,7 @@ public abstract class BootBlock {
 		// will not handle them correctly because they will think the volume has
 		// a different type of FAT than
 		// what you think it does.
-		*/
+		
 	}
 
 	void initMemberVariables(byte[] buffer) {
@@ -218,7 +220,7 @@ public abstract class BootBlock {
 		// BPB_TotSec16
 		BPB_TotSec16 = DataConverter.getValueFrom2Bytes(buffer, 19);
 		System.out.println("BPB_TotSec16: " + (int) BPB_TotSec16);
-
+		
 		// BPB_Media
 		BPB_Media = DataConverter.getValueFrom1Byte(buffer, 21);
 		System.out.println("BPB_Media: " + (int) BPB_Media);
@@ -349,5 +351,25 @@ public abstract class BootBlock {
 
 	public void setBPB_TotSec32(long bPB_TotSec32) {
 		BPB_TotSec32 = bPB_TotSec32;
+	}
+
+	public long getNumberOfDataSectors() {
+		return numberOfDataSectors;
+	}
+
+	public long getCountofClustersInDataRegion() {
+		return CountofClustersInDataRegion;
+	}
+
+	public FileSystemType getType() {
+		return type;
+	}
+
+	public long getFATSz() {
+		return FATSz;
+	}
+
+	public long getBPB_FATSz32() {
+		return BPB_FATSz32;
 	}
 }
