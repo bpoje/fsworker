@@ -260,8 +260,8 @@ public class FileSystemFat16 extends FileSystemFat{
 		//Is cluster bad
 		boolean isBad = fileAllocationTable16.isClusterBad(clusterNumber);
 		
-		System.out.println("isAvailable: " + isAvailable);
-		System.out.println("isBad: " + isBad);
+		//System.out.println("isAvailable: " + isAvailable);
+		//System.out.println("isBad: " + isBad);
 		
 		//If cluster is not available and is not bad cluster => failed
 		if (!isAvailable && !isBad)
@@ -274,14 +274,80 @@ public class FileSystemFat16 extends FileSystemFat{
 		//System.out.println("isBad: " + fileAllocationTable16.isClusterBad(clusterNumber));
 		
 		long dataAddress = dataRegion16.getClusterAddress(clusterNumber);
-		System.out.printf("dataAddress: 0x%02Xh\n", dataAddress);
+		//System.out.printf("dataAddress: 0x%02Xh\n", dataAddress);
 		boolean writeSuccess = dataRegion16.setClusterData(dataAddress, data);
 		
 		return writeSuccess;
 	}
 	
+	public DataTransfer readFakeBadCluster(char clusterNumber) throws IOException, NotEnoughBytesReadException
+	{
+		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
+		DataRegion16 dataRegion16 = (DataRegion16)dataRegion;
+		
+		//Is cluster available
+		boolean isAvailable = fileAllocationTable16.isClusterAvailable(clusterNumber);
+		
+		//Is cluster bad
+		boolean isBad = fileAllocationTable16.isClusterBad(clusterNumber);
+		
+		//System.out.println("isAvailable: " + isAvailable);
+		//System.out.println("isBad: " + isBad);
+		
+		//If cluster is not bad => failed
+		if (!isBad)
+			return new DataTransfer(null, "");
+		
+		long dataAddress = dataRegion16.getClusterAddress(clusterNumber);
+		//System.out.printf("dataAddress: 0x%02Xh\n", dataAddress);
+		byte data[] = dataRegion16.getClusterData(dataAddress);
+		
+		return new DataTransfer(data);
+	}
+	
+	//Mark cluster as available
+	public void clearFakeBadCluster(char clusterNumber) throws IOException, NotEnoughBytesReadException
+	{
+		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
+		
+		//Is cluster bad
+		boolean isBad = fileAllocationTable16.isClusterBad(clusterNumber);
+		
+		System.out.println("isBad: " + isBad);
+		
+		//If cluster is not bad => failed
+		if (!isBad)
+			return;
+		
+		//Mark cluster as available
+		fileAllocationTable16.setClusterAvailable(clusterNumber);
+	}
+	
 	public long getBytesPerCluster()
 	{
 		return ((DataRegion16)dataRegion).getBytesPerCluster();
+	}
+	
+	public long getCountofClustersInDataRegion()
+	{
+		return bootBlock.getCountofClustersInDataRegion();
+	}
+	
+	public boolean isClusterAvailable(char clusterNumber) throws IOException, NotEnoughBytesReadException
+	{
+		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
+		return fileAllocationTable16.isClusterAvailable(clusterNumber);
+	}
+	
+	public boolean isClusterBad(char clusterNumber) throws IOException, NotEnoughBytesReadException
+	{
+		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
+		return fileAllocationTable16.isClusterBad(clusterNumber);
+	}
+	
+	public long getFATPointerAddress(char clusterNumber)
+	{
+		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
+		return fileAllocationTable16.getFATPointerAddress(clusterNumber);
 	}
 }

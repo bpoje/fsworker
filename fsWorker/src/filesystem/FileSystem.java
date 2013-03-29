@@ -32,4 +32,6 @@ public abstract class FileSystem {
 	
 	//Hide data in bad cluster (Bad sector makes the entire containing cluster unusable)
 	public abstract boolean writeFakeBadCluster(char clusterNumber, byte[] data) throws IOException, NotEnoughBytesReadException;
+	public abstract DataTransfer readFakeBadCluster(char clusterNumber) throws IOException, NotEnoughBytesReadException;
+	public abstract void clearFakeBadCluster(char clusterNumber) throws IOException, NotEnoughBytesReadException;
 }

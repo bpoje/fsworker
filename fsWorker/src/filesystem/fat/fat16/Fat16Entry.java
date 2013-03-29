@@ -280,7 +280,7 @@ public class Fat16Entry extends FatEntry {
 	public DataTransfer readFromFileSlack() throws IOException, NotEnoughBytesReadException
 	{
 		if (filesizeInBytes <= 0)
-			return new DataTransfer(null, "");;
+			return new DataTransfer(null, "");
 		
 		long bytesPerCluster = ((DataRegion16)dataRegion).getBytesPerCluster();
 		//long totalClustersNeededForData = (long) Math

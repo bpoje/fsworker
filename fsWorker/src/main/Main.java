@@ -64,13 +64,40 @@ public class Main {
 			byte[] data = new byte[(int) fileSystemFAT16.getBytesPerCluster()];
 			
 			for (int i = 0; i < data.length; i++)
-			{
 				data[i] = (byte)(i % 256);
-			}
 			
-			System.out.println("fileSystemFAT16.getBytesPerCluster(): " + (int)fileSystemFAT16.getBytesPerCluster());
-			boolean success = fileSystemFAT16.writeFakeBadCluster((char) 398, data);
-			System.out.println("success: " + success);
+			char clusterNumber = 398;
+			
+			boolean success = fileSystemFAT16.writeFakeBadCluster(clusterNumber, data);
+			System.out.println("success writeFakeBadCluster: " + success);
+			
+			DataTransfer dt = fileSystemFAT16.readFakeBadCluster(clusterNumber);
+			
+			if (dt.getPayload() != null)
+			{
+				byte [] temp = dt.getPayload();
+				//OutputFormater.printArrayHex(dt.getPayload());
+				//System.out.println("dt.getMd5(): " + dt.getMd5());
+				
+				for (int i = 0; i < temp.length; i++)
+					if (data[i] != temp[i])
+					{
+						System.out.println("Read test failed!");
+						break;
+					}
+			}
+				
+			//Clear cluster bad marking
+			//fileSystemFAT16.clearFakeBadCluster(clusterNumber);
+			
+			//Output FAT table & clusters markings
+			//for (int iClusterNumber = 0; iClusterNumber < fileSystemFAT16.getCountofClustersInDataRegion(); iClusterNumber++)
+			//{
+			//	long fatEntryAddress = fileSystemFAT16.getFATPointerAddress((char)iClusterNumber);	
+			//	System.out.printf("clusterNumber: %d, fatEntryAddress: 0x%02Xh, isAvailable: %b, isClusterBad: %b\n", (int)iClusterNumber, fatEntryAddress, fileSystemFAT16.isClusterAvailable((char)iClusterNumber), fileSystemFAT16.isClusterBad((char)iClusterNumber));
+			//}
+			
+			
 			//-----------------------------------------------------------------------------
 			/*
 			//EXAMPLE

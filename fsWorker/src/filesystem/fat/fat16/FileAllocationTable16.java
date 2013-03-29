@@ -134,7 +134,7 @@ public class FileAllocationTable16 extends FileAllocationTable {
 	public boolean isClusterAvailable(char clusterNumber) throws IOException, NotEnoughBytesReadException
 	{
 		long fatEntryAddress = getFATPointerAddress(clusterNumber);
-		System.out.printf("clusterNumber: %d, fatEntryAddress: 0x%02Xh\n", (int)clusterNumber, fatEntryAddress);
+		//System.out.printf("clusterNumber: %d, fatEntryAddress: 0x%02Xh\n", (int)clusterNumber, fatEntryAddress);
 		
 		char numberOfDataCluster = getFATPointerValue(fatEntryAddress);
 		return (numberOfDataCluster == 0x0000);
