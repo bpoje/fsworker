@@ -87,4 +87,17 @@ public class DataConverter {
 		String value = new String(subArray);
 		return value;
 	}
+	
+	//Convert java char data type (2 bytes, UNSIGNED, Unicode, 0 to 65,535) to 2 bytes
+	public static byte [] get2BytesFromValue(char value)
+	{
+		byte temp[] = new byte[2];
+		
+		ByteBuffer byteBuffer = ByteBuffer.wrap(temp);
+		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+		
+		byteBuffer.putChar(value);
+		
+		return byteBuffer.array();
+	}
 }

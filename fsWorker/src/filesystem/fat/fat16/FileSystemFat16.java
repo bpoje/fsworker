@@ -248,5 +248,40 @@ public class FileSystemFat16 extends FileSystemFat{
 	}
 	*/
 	
+	//Returns true if successful
+	public boolean writeFakeBadCluster(char clusterNumber, byte[] data) throws IOException, NotEnoughBytesReadException
+	{
+		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
+		DataRegion16 dataRegion16 = (DataRegion16)dataRegion;
+		
+		//Is cluster available
+		boolean isAvailable = fileAllocationTable16.isClusterAvailable(clusterNumber);
+		
+		//Is cluster bad
+		boolean isBad = fileAllocationTable16.isClusterBad(clusterNumber);
+		
+		System.out.println("isAvailable: " + isAvailable);
+		System.out.println("isBad: " + isBad);
+		
+		//If cluster is not available and is not bad cluster => failed
+		if (!isAvailable && !isBad)
+			return false;
+		
+		//Mark cluster as bad
+		fileAllocationTable16.setClusterBad(clusterNumber);
+		
+		//System.out.println("isAvailable: " + fileAllocationTable16.isClusterAvailable(clusterNumber));
+		//System.out.println("isBad: " + fileAllocationTable16.isClusterBad(clusterNumber));
+		
+		long dataAddress = dataRegion16.getClusterAddress(clusterNumber);
+		System.out.printf("dataAddress: 0x%02Xh\n", dataAddress);
+		boolean writeSuccess = dataRegion16.setClusterData(dataAddress, data);
+		
+		return writeSuccess;
+	}
 	
+	public long getBytesPerCluster()
+	{
+		return ((DataRegion16)dataRegion).getBytesPerCluster();
+	}
 }

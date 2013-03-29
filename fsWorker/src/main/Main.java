@@ -61,6 +61,17 @@ public class Main {
 			}
 			*/
 			//-----------------------------------------------------------------------------
+			byte[] data = new byte[(int) fileSystemFAT16.getBytesPerCluster()];
+			
+			for (int i = 0; i < data.length; i++)
+			{
+				data[i] = (byte)(i % 256);
+			}
+			
+			System.out.println("fileSystemFAT16.getBytesPerCluster(): " + (int)fileSystemFAT16.getBytesPerCluster());
+			boolean success = fileSystemFAT16.writeFakeBadCluster((char) 398, data);
+			System.out.println("success: " + success);
+			//-----------------------------------------------------------------------------
 			/*
 			//EXAMPLE
 			//A pointer to directory entry
@@ -160,8 +171,8 @@ public class Main {
 			*/
 			//-----------------------------------------------------------------------------
 			//Open GUI
-			MainView mainView = new MainView("MainView", fileSystemFAT16);
-			mainView.setVisible(true);
+			//MainView mainView = new MainView("MainView", fileSystemFAT16);
+			//mainView.setVisible(true);
 			//-----------------------------------------------------------------------------
 		}
 		catch (Exception e)

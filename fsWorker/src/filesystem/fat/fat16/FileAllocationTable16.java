@@ -69,6 +69,9 @@ public class FileAllocationTable16 extends FileAllocationTable {
 	}
 	
 	// Finds address in FAT for a certain data clusterNumber
+	//The first cluster of the data area is cluster #2. That leaves the first two entries of the FAT unused.
+	//In the first byte of the first entry a copy of the media descriptor is stored. The remaining bits of
+	//this entry are 1. In the second entry the end-of-file marker is stored.
 	public long getFATPointerAddress(char clusterNumber) {
 		// Get pointer from FAT
 		// long FATPointerAddress = FAT1Address + (long)startingClusterNumber *
@@ -90,6 +93,23 @@ public class FileAllocationTable16 extends FileAllocationTable {
 		return newClusterNumber;
 	}
 	
+	// Reads entry from FAT at certain address
+	public char getFATPointerValue(char clusterNumber) throws IOException, NotEnoughBytesReadException {
+		
+		long fatPointerAddress = getFATPointerAddress(clusterNumber);
+		byte buffer[] = fileSystemIO.readFSImage(fatPointerAddress, 2);
+		char newClusterNumber = DataConverter.getValueFrom2Bytes(buffer,0);
+		
+		return newClusterNumber;
+	}
+	
+	// Writes entry to FAT at certain address
+	public void setFATPointerValue(long fatPointerAddress, char newClusterNumber) throws IOException, NotEnoughBytesReadException {
+		
+		byte buffer[] = DataConverter.get2BytesFromValue(newClusterNumber);
+		fileSystemIO.writeFSImage(fatPointerAddress, buffer);
+	}
+	
 	// Get the number of last data cluster for our file
 	public char getLastFATPointerValue(char firstClusterNumber) throws IOException, NotEnoughBytesReadException {
 		long address = 0;
@@ -102,5 +122,42 @@ public class FileAllocationTable16 extends FileAllocationTable {
 		} while ((int) nextClusterNumber != (int) 0xFFFF);
 
 		return firstClusterNumber;
+	}
+	
+	
+	//FAT Code Range	Meaning
+	//0000h				Available Cluster
+	//0002h-FFEFh		Used, Next Cluster in File
+	//FFF0h-FFF6h		Reserved Cluster
+	//FFF7h				BAD Cluster
+	//FFF8h-FFFF		Used, Last Cluster in File
+	public boolean isClusterAvailable(char clusterNumber) throws IOException, NotEnoughBytesReadException
+	{
+		long fatEntryAddress = getFATPointerAddress(clusterNumber);
+		System.out.printf("clusterNumber: %d, fatEntryAddress: 0x%02Xh\n", (int)clusterNumber, fatEntryAddress);
+		
+		char numberOfDataCluster = getFATPointerValue(fatEntryAddress);
+		return (numberOfDataCluster == 0x0000);
+	}
+	
+	public boolean isClusterBad(char clusterNumber) throws IOException, NotEnoughBytesReadException
+	{
+		long fatEntryAddress = getFATPointerAddress(clusterNumber);
+		//System.out.printf("clusterNumber: %d, fatEntryAddress: 0x%02Xh\n", (int)clusterNumber, fatEntryAddress);
+		
+		char numberOfDataCluster = getFATPointerValue(fatEntryAddress);
+		return (numberOfDataCluster == 0xFFF7);
+	}
+	
+	public void setClusterAvailable(char clusterNumber) throws IOException, NotEnoughBytesReadException
+	{
+		long fatEntryAddress = getFATPointerAddress(clusterNumber);
+		setFATPointerValue(fatEntryAddress, (char) 0x0000);
+	}
+	
+	public void setClusterBad(char clusterNumber) throws IOException, NotEnoughBytesReadException
+	{
+		long fatEntryAddress = getFATPointerAddress(clusterNumber);
+		setFATPointerValue(fatEntryAddress, (char) 0xFFF7);
 	}
 }

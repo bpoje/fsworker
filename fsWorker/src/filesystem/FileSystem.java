@@ -25,6 +25,11 @@ public abstract class FileSystem {
 	public abstract ArrayList<FatEntry> ls() throws IOException, NotEnoughBytesReadException;
 	public abstract DataTransfer getData(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
 	public abstract boolean cd(FileSystemEntry entry);
+	
+	//Hide data in file slack
 	public abstract void writeToSlack(FileSystemEntry entry, byte [] buffer) throws IOException, NotEnoughBytesReadException;
 	public abstract DataTransfer readFromSlack(FileSystemEntry entry) throws IOException, NotEnoughBytesReadException;
+	
+	//Hide data in bad cluster (Bad sector makes the entire containing cluster unusable)
+	public abstract boolean writeFakeBadCluster(char clusterNumber, byte[] data) throws IOException, NotEnoughBytesReadException;
 }
