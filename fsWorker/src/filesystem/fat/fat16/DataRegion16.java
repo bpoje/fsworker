@@ -42,7 +42,10 @@ public class DataRegion16 extends DataRegion {
 		bytesPerCluster = bootBlock.getBPB_BytsPerSec() * bootBlock.getBPB_SecPerClus();
 		System.out.println("bytesPerCluster: " + bytesPerCluster);
 	}
-	
+	// Finds address in FAT for a certain data clusterNumber
+	//The first cluster of the data area is cluster #2. That leaves the first two entries of the FAT unused.
+	//In the first byte of the first fat entry a copy of the media descriptor is stored. The remaining bits of
+	//this fat entry are 1. In the second fat entry the end-of-file marker is stored.
 	public long getClusterAddress(char clusterNumber)
 	{
 		//long address1 = address + bytesPerCluster * 1;

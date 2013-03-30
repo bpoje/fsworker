@@ -12,8 +12,16 @@ import filesystem.io.FileSystemIO;
 public class FileAllocationTable16 extends FileAllocationTable {
 
 	protected ArrayList<Long> FATAddresses = new ArrayList<Long>();
+	// count of sectors occupied by ONE FAT
 	protected long sizeOfOneFAT;
+	
+	// count of FAT data structures on the volume
 	protected char numberOfFATs;
+	
+	//Number of all possible entries in fat table
+	protected long FATSizeInEntries;
+	
+	public static final long fatEntrySize = 2; //Bytes
 	
 	public FileAllocationTable16(FileSystemIO fileSystemIO) {
 		super(fileSystemIO);
@@ -66,6 +74,10 @@ public class FileAllocationTable16 extends FileAllocationTable {
 			System.out.printf("FATTableAddresses.get(%d): 0x%02Xh\n", i,
 					FATAddresses.get(i));
 		}
+		
+		//Number of all possible entries in fat table = "count of sectors occupied by ONE FAT" * "bytesPerSector" / "Number of bytes per fat entry"
+		FATSizeInEntries = sizeOfOneFAT * bytesPerSector / fatEntrySize;
+		System.out.println("FATSizeInEntries: " + FATSizeInEntries);
 	}
 	
 	// Finds address in FAT for a certain data clusterNumber
@@ -159,5 +171,25 @@ public class FileAllocationTable16 extends FileAllocationTable {
 	{
 		long fatEntryAddress = getFATPointerAddress(clusterNumber);
 		setFATPointerValue(fatEntryAddress, (char) 0xFFF7);
+	}
+
+	public ArrayList<Long> getFATAddresses() {
+		return FATAddresses;
+	}
+
+	public long getSizeOfOneFAT() {
+		return sizeOfOneFAT;
+	}
+
+	public char getNumberOfFATs() {
+		return numberOfFATs;
+	}
+
+	public long getFATSizeInEntries() {
+		return FATSizeInEntries;
+	}
+
+	public static long getFatentrysize() {
+		return fatEntrySize;
 	}
 }

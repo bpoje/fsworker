@@ -9,6 +9,7 @@ import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.FatEntry;
 import filesystem.fat.FileSystemFat;
 import filesystem.hash.Hash;
+import filesystem.io.DataConverter;
 import filesystem.io.DataTransfer;
 import filesystem.io.FileSystemIO;
 
@@ -333,6 +334,10 @@ public class FileSystemFat16 extends FileSystemFat{
 		return bootBlock.getCountofClustersInDataRegion();
 	}
 	
+	public long getFATSizeInEntries() {
+		return ((FileAllocationTable16)fileAllocationTable).getFATSizeInEntries();
+	}
+	
 	public boolean isClusterAvailable(char clusterNumber) throws IOException, NotEnoughBytesReadException
 	{
 		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
@@ -349,5 +354,16 @@ public class FileSystemFat16 extends FileSystemFat{
 	{
 		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
 		return fileAllocationTable16.getFATPointerAddress(clusterNumber);
+	}
+	
+	public char getFATPointerValue(char clusterNumber) throws IOException, NotEnoughBytesReadException {
+		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
+		return fileAllocationTable16.getFATPointerValue(clusterNumber);
+	}
+	
+	//The first cluster of the data area is cluster #2. That leaves the first two entries of the FAT unused.
+	public long getDataClusterAddress(char clusterNumber)
+	{
+		return ((DataRegion16)dataRegion).getClusterAddress(clusterNumber);
 	}
 }

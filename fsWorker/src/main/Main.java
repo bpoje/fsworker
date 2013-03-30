@@ -92,12 +92,23 @@ public class Main {
 			
 			//Output FAT table & clusters markings
 			//for (int iClusterNumber = 0; iClusterNumber < fileSystemFAT16.getCountofClustersInDataRegion(); iClusterNumber++)
+			////-------for (int iClusterNumber = 0; iClusterNumber < fileSystemFAT16.getFATSizeInEntries(); iClusterNumber++)
 			//{
 			//	long fatEntryAddress = fileSystemFAT16.getFATPointerAddress((char)iClusterNumber);	
 			//	System.out.printf("clusterNumber: %d, fatEntryAddress: 0x%02Xh, isAvailable: %b, isClusterBad: %b\n", (int)iClusterNumber, fatEntryAddress, fileSystemFAT16.isClusterAvailable((char)iClusterNumber), fileSystemFAT16.isClusterBad((char)iClusterNumber));
 			//}
 			
+			//Output data region
 			
+			//long numberOfDataClusters = fileSystemFAT16.getCountofClustersInDataRegion();
+			//System.out.println("numberOfDataClusters: " + numberOfDataClusters);
+			
+			//The first cluster of the data area is cluster #2. That leaves the first two entries of the FAT unused.
+			//for (int iClusterNumber = 2; iClusterNumber < 2 + numberOfDataClusters; iClusterNumber++)
+			//{
+			//	long dataClusterAddress = fileSystemFAT16.getDataClusterAddress((char) iClusterNumber);
+			//	System.out.printf("clusterNumber: %d, dataClusterAddress: 0x%02Xh\n", (int)iClusterNumber, dataClusterAddress);
+			//}
 			//-----------------------------------------------------------------------------
 			/*
 			//EXAMPLE
@@ -198,8 +209,8 @@ public class Main {
 			*/
 			//-----------------------------------------------------------------------------
 			//Open GUI
-			//MainView mainView = new MainView("MainView", fileSystemFAT16);
-			//mainView.setVisible(true);
+			MainView mainView = new MainView("MainView", fileSystemFAT16);
+			mainView.setVisible(true);
 			//-----------------------------------------------------------------------------
 		}
 		catch (Exception e)

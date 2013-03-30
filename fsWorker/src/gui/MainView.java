@@ -35,6 +35,7 @@ import filesystem.fat.fat16.Fat16Directory;
 import filesystem.fat.fat16.Fat16Entry;
 import filesystem.fat.fat16.FileAllocationTable16;
 import filesystem.fat.fat16.FileSystemFat16;
+import filesystem.utils.OutputFormater;
 
 import javax.swing.JScrollPane;
 import javax.swing.event.TreeSelectionEvent;
@@ -61,7 +62,9 @@ public class MainView extends JFrame {
 	private long totalSlackFileSizeInBytes = 0;
 	
 	private Container container;
-	private Container infoContainer;
+	private Container infoContainer = new Container();
+	private Container fatContainer = new Container();
+	private Container dataContainer = new Container();
 	
 	//public MainView(String title, BootBlock bootBlock, FatDirectory fatDirectory, DataRegion dataRegion, FileAllocationTable fileAllocationTable) throws IOException, NotEnoughBytesReadException
 	public MainView(String title, FileSystemFat16 fileSystemFAT16) throws IOException, NotEnoughBytesReadException
@@ -85,7 +88,7 @@ public class MainView extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		container = getContentPane();
-		container.setLayout(new GridLayout(2, 1));
+		container.setLayout(new GridLayout(3, 1));
 		
 		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData("CF","","","","","","","","","",true));
 		
@@ -111,15 +114,14 @@ public class MainView extends JFrame {
         container.add(new JScrollPane(binTree));
         
         //Bottom container with general informations
-        infoContainer = new Container();
         infoContainer.setLayout(new GridLayout(10, 1));
-        JLabel label1 = new JLabel("Total file slack size in bytes: " + formatOutput(totalSlackFileSizeInBytes));
+        JLabel label1 = new JLabel("Total file slack size in bytes: " + OutputFormater.formatOutput(totalSlackFileSizeInBytes));
         infoContainer.add(label1);
         
         JLabel label2 = new JLabel("FAT type: " + bootBlock16.getType());
         infoContainer.add(label2);
         
-        JLabel label3 = new JLabel("Bytes per sector: " + formatOutput((long)bootBlock16.getBPB_BytsPerSec()));
+        JLabel label3 = new JLabel("Bytes per sector: " + OutputFormater.formatOutput((long)bootBlock16.getBPB_BytsPerSec()));
         infoContainer.add(label3);
         
         JLabel label4 = new JLabel("Number of sectors per allocation unit (cluster): " + (long)bootBlock16.getBPB_SecPerClus());
@@ -127,7 +129,7 @@ public class MainView extends JFrame {
         
         //Cluster <=> AllocationUnit
         long bytesPerAllocationUnit = (long)bootBlock16.getBPB_BytsPerSec() * (long)bootBlock16.getBPB_SecPerClus();
-        JLabel label5 = new JLabel("Number of Bytes per allocation unit (cluster): " + formatOutput(bytesPerAllocationUnit));
+        JLabel label5 = new JLabel("Number of Bytes per allocation unit (cluster): " + OutputFormater.formatOutput(bytesPerAllocationUnit));
         infoContainer.add(label5);
         
         JLabel label6 = new JLabel("Number of reserved blocks: " + (long)bootBlock16.getBPB_RsvdSecCnt());
@@ -146,31 +148,18 @@ public class MainView extends JFrame {
         infoContainer.add(label10);
         
         container.add(infoContainer);
-	}
-	
-	public String formatOutput(long numberOfBytes)
-	{
-		StringBuffer output = new StringBuffer();
-		
-        DecimalFormat df = new DecimalFormat("#.##");
-		
-		output.append(Long.toString(numberOfBytes) + " B");
-		
-		if (numberOfBytes >= 1024)
-		{
-			double KB = (double)numberOfBytes / (double)1024;
-			
-			output.append(" = " + df.format(KB) + " KB");
-			
-			if (numberOfBytes >= (long)1024 * (long)1024)
-			{
-				double MB = (double)KB / (double)1024;
-				
-				output.append(" = " + df.format(MB) + " MB");
-			}
-		}
-		
-		return output.toString();
+        
+        //---------------------------------------------------------
+        FatTableComponent fatTableComponent = new FatTableComponent(fatContainer, fileSystemFAT16);
+        fatTableComponent.fillModel();
+        
+        container.add(fatContainer);
+        
+        DataTableComponent dataTableComponent = new DataTableComponent(dataContainer, fileSystemFAT16);
+        dataTableComponent.fillModel();
+        
+        container.add(dataContainer);
+        //---------------------------------------------------------
 	}
 	
 	private void scanFileSystem(ArrayList<FatEntry> files, DefaultMutableTreeNode treeNode) throws IOException, NotEnoughBytesReadException
@@ -194,10 +183,10 @@ public class MainView extends JFrame {
 			totalSlackFileSizeInBytes += fileSlackSizeInBytes;
 			
 			String sStartingClusterNumber = Long.toString((long)startingClusterNumber);
-			String sFilesizeInBytes = formatOutput(filesizeInBytes);
+			String sFilesizeInBytes = OutputFormater.formatOutput(filesizeInBytes);
 			String sTotalClustersNeededForData = Long.toString(totalClustersNeededForData);
-			String sTotalAllocatedSizeInBytes = formatOutput(totalAllocatedSizeInBytes);
-			String sFileSlackSizeInBytes = formatOutput(fileSlackSizeInBytes);
+			String sTotalAllocatedSizeInBytes = OutputFormater.formatOutput(totalAllocatedSizeInBytes);
+			String sFileSlackSizeInBytes = OutputFormater.formatOutput(fileSlackSizeInBytes);
 			
 			//If file
 			if (!file.isSubdirectoryEntry())

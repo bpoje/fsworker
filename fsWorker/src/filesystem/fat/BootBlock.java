@@ -102,13 +102,15 @@ public abstract class BootBlock {
 		// This field is only defined for FAT32 media and does not exist on
 		// FAT12 and FAT16 media. This field is the FAT32 32-bit count of
 		// sectors occupied by ONE FAT. BPB_FATSz16 must be 0.
-
-		// long FATSz;
+		
+		// FATSz <==> count of sectors occupied by ONE FAT
 		if (BPB_FATSz16 != 0)
 			FATSz = BPB_FATSz16;
 		else
 			FATSz = BPB_FATSz32;
-
+		
+		//TotSec <==> Total count of sectors on the volume. This count includes the count
+		//of all sectors in all four regions of the volume.
 		long TotSec;
 		if (BPB_TotSec16 != 0)
 			TotSec = BPB_TotSec16;
@@ -122,7 +124,7 @@ public abstract class BootBlock {
 
 		// determine the count of clusters in data region
 		CountofClustersInDataRegion = numberOfDataSectors / BPB_SecPerClus;
-		System.out.println("CountofClusters: " + CountofClustersInDataRegion);
+		System.out.println("CountofClustersInDataRegion: " + CountofClustersInDataRegion);
 
 		// Now we can determine the FAT type
 		if (CountofClustersInDataRegion < 4085) {
@@ -218,6 +220,13 @@ public abstract class BootBlock {
 		System.out.println("BPB_RootEntCnt: " + (int) BPB_RootEntCnt);
 
 		// BPB_TotSec16
+		//This field is the old 16-bit total count of sectors on the volume.
+		//This count includes the count of all sectors in all four regions of the
+		//volume. This field can be 0; if it is 0, then BPB_TotSec32 must be
+		//non-zero. For FAT32 volumes, this field must be 0. For FAT12 and
+		//FAT16 volumes, this field contains the sector count, and
+		//BPB_TotSec32 is 0 if the total sector count “fits” (is less than
+		//0x10000).
 		BPB_TotSec16 = DataConverter.getValueFrom2Bytes(buffer, 19);
 		System.out.println("BPB_TotSec16: " + (int) BPB_TotSec16);
 		
@@ -245,6 +254,12 @@ public abstract class BootBlock {
 		System.out.println("BPB_HiddSec: " + BPB_HiddSec);
 
 		// BPB_TotSec32
+		//This field is the new 32-bit total count of sectors on the volume.
+		//This count includes the count of all sectors in all four regions of the
+		//volume. This field can be 0; if it is 0, then BPB_TotSec16 must be
+		//non-zero. For FAT32 volumes, this field must be non-zero. For
+		//FAT12/FAT16 volumes, this field contains the sector count if
+		//BPB_TotSec16 is 0 (count is greater than or equal to 0x10000).
 		BPB_TotSec32 = DataConverter.getValueFrom4Bytes(buffer, 32);
 		System.out.println("BPB_TotSec32: " + BPB_TotSec32);
 	}
