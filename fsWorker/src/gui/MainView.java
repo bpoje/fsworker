@@ -2,16 +2,25 @@ package gui;
 
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FileDialog;
 import java.awt.GridLayout;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import javax.swing.DefaultCellEditor;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTree;
@@ -44,7 +53,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class MainView extends JFrame {
+public class MainView extends JFrame implements ActionListener {
 	private FileSystemFat16 fileSystemFAT16;
 	
 	private BootBlock bootBlock;
@@ -63,10 +72,18 @@ public class MainView extends JFrame {
 	
 	private Container container;
 	private Container infoContainer = new Container();
-	private Container fatContainer = new Container();
 	private Container dataContainer = new Container();
 	
-	//public MainView(String title, BootBlock bootBlock, FatDirectory fatDirectory, DataRegion dataRegion, FileAllocationTable fileAllocationTable) throws IOException, NotEnoughBytesReadException
+	//Menu
+	private JMenuBar menuBar;
+	private JMenu menu, submenu;
+	private JMenuItem menuItemExit, menuItemOpenData;
+	
+	//Data loading
+	File fileToLoadData = null;
+	private JTable tableLoadedData;
+	private DefaultTableModel modelLoadedData = new DefaultTableModel();
+	
 	public MainView(String title, FileSystemFat16 fileSystemFAT16) throws IOException, NotEnoughBytesReadException
 	{
 		//Set window title
@@ -84,11 +101,45 @@ public class MainView extends JFrame {
 		dataRegion16 = (DataRegion16)dataRegion;
 		fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
 		
-		setSize(800, 400);
+		setSize(1200, 1000);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		//Data loading
+		modelLoadedData.addColumn("Filename");
+		modelLoadedData.addColumn("Size");
+		modelLoadedData.addColumn("Clusters required");
+		
+	  	tableLoadedData = new JTable(modelLoadedData){
+	        private static final long serialVersionUID = 1L;
+	        
+	        //Disable editing
+	        public boolean isCellEditable(int row, int column) {                
+	                return false;               
+	        };
+	    };
+	    
+		//Create the menu bar.
+		menuBar = new JMenuBar();
+		
+		//Build the first menu.
+		menu = new JMenu("File");
+		menu.setMnemonic(KeyEvent.VK_F);
+		menu.getAccessibleContext().setAccessibleDescription(
+		        "File menu");
+		menuBar.add(menu);
+		
+		menuItemOpenData = new JMenuItem("Open data", KeyEvent.VK_I);
+		menuItemOpenData.addActionListener(this);
+		menu.add(menuItemOpenData);
+		
+		menuItemExit = new JMenuItem("Exit", KeyEvent.VK_X);
+		menuItemExit.addActionListener(this);
+		menu.add(menuItemExit);
+		
+		this.setJMenuBar(menuBar);
+		
 		container = getContentPane();
-		container.setLayout(new GridLayout(3, 1));
+		container.setLayout(new GridLayout(4, 1));
 		
 		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData("CF","","","","","","","","","",true));
 		
@@ -149,12 +200,10 @@ public class MainView extends JFrame {
         
         container.add(infoContainer);
         
+        //Data loading
+        container.add(new JScrollPane(tableLoadedData));
+        
         //---------------------------------------------------------
-        FatTableComponent fatTableComponent = new FatTableComponent(fatContainer, fileSystemFAT16);
-        fatTableComponent.fillModel();
-        
-        container.add(fatContainer);
-        
         DataTableComponent dataTableComponent = new DataTableComponent(dataContainer, fileSystemFAT16);
         dataTableComponent.fillModel();
         
@@ -235,6 +284,38 @@ public class MainView extends JFrame {
         TableCellRenderer renderer = new DefaultTableRenderer(toString);
         table.setDefaultRenderer(Point.class, renderer);
         table.setDefaultRenderer(Dimension.class, renderer);
+    }
+	
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == menuItemExit)
+		{
+			this.setVisible(false);
+			this.dispose(); //Destroy the JFrame object
+		}
+		else if (e.getSource() == menuItemOpenData)
+		{
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setDialogTitle("Specify a file to load");
+			
+			int userSelection = fileChooser.showOpenDialog(this);
+			
+			//JFileChooser.CANCEL_OPTION : the user cancels file selection.
+			//JFileChooser.APPROVE_OPTION: the user accepts file selection.
+			//JFileChooser.ERROR_OPTION: if there’s an error or the user closes the dialog by clicking on X button.
+			if (userSelection == JFileChooser.APPROVE_OPTION) {
+				fileToLoadData = fileChooser.getSelectedFile();
+			    System.out.println("Open as file: " + fileToLoadData.getAbsolutePath());
+			    System.out.println("length in bytes: " + fileToLoadData.length());
+			    
+			    //Empty data table
+	            for( int i = modelLoadedData.getRowCount() - 1; i >= 0; i-- ) {
+	            	modelLoadedData.removeRow(i);
+	            }
+			    
+			    long bytesPerAllocationUnit = (long)bootBlock16.getBPB_BytsPerSec() * (long)bootBlock16.getBPB_SecPerClus();
+			    modelLoadedData.addRow(new Object[]{fileToLoadData.getAbsolutePath(), OutputFormater.formatOutput(fileToLoadData.length()), (long)Math.ceil((double)fileToLoadData.length() / (double)bytesPerAllocationUnit)});
+			}
+		}
     }
 }
 

@@ -53,6 +53,11 @@ public class DataRegion16 extends DataRegion {
 		return address;
 	}
 	
+	public byte[] getClusterData(char clusterNumber) throws IOException, NotEnoughBytesReadException
+	{
+		return getClusterData(getClusterAddress(clusterNumber));
+	}
+	
 	public byte[] getClusterData(long address) throws IOException, NotEnoughBytesReadException
 	{
 		//byte cluster [] = Arrays.copyOfRange(buffer, (int)address, (int)address + (int)bytesPerCluster);

@@ -366,4 +366,9 @@ public class FileSystemFat16 extends FileSystemFat{
 	{
 		return ((DataRegion16)dataRegion).getClusterAddress(clusterNumber);
 	}
+	
+	public byte[] getClusterData(char clusterNumber) throws IOException, NotEnoughBytesReadException
+	{
+		return ((DataRegion16)dataRegion).getClusterData(clusterNumber);
+	}
 }

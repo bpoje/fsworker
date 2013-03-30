@@ -63,6 +63,11 @@ public class OutputFormater {
 		return stringBuilder.toString();
 	}
 	
+	public static String byteToHexString(byte byteValue)
+	{
+		return String.format("0x%02x", byteValue & 0xff);
+	}
+	
 	public static String longToHexString(long longValue)
 	{
 		byte byteArray[] = new byte[8];
