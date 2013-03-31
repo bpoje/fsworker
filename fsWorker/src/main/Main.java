@@ -29,6 +29,8 @@ public class Main {
 			return;
 		}
 		
+		//System.out.println(new File(args[0]).getAbsolutePath());
+		
 		try
 		{
 			String filename = args[0];
@@ -68,6 +70,7 @@ public class Main {
 			
 			char clusterNumber = 398;
 			
+			/*
 			boolean success = fileSystemFAT16.writeFakeBadCluster(clusterNumber, data);
 			System.out.println("success writeFakeBadCluster: " + success);
 			
@@ -86,7 +89,8 @@ public class Main {
 						break;
 					}
 			}
-				
+			*/
+			
 			//Clear cluster bad marking
 			//fileSystemFAT16.clearFakeBadCluster(clusterNumber);
 			

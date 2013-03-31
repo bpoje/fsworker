@@ -8,12 +8,15 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,6 +24,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTree;
@@ -53,7 +57,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class MainView extends JFrame implements ActionListener {
+public class MainView extends JFrame implements ActionListener, MouseListener {
 	private FileSystemFat16 fileSystemFAT16;
 	
 	private BootBlock bootBlock;
@@ -74,6 +78,8 @@ public class MainView extends JFrame implements ActionListener {
 	private Container infoContainer = new Container();
 	private Container dataContainer = new Container();
 	
+	private JXTreeTable binTree;
+	
 	//Menu
 	private JMenuBar menuBar;
 	private JMenu menu, submenu;
@@ -83,6 +89,12 @@ public class MainView extends JFrame implements ActionListener {
 	File fileToLoadData = null;
 	private JTable tableLoadedData;
 	private DefaultTableModel modelLoadedData = new DefaultTableModel();
+	
+	private JTable tableSelectedFiles;
+	private DefaultTableModel modelSelectedFiles = new DefaultTableModel();
+	
+	private JPanel panelButtons = new JPanel();
+	private JButton buttonHide = new JButton("Hide");
 	
 	public MainView(String title, FileSystemFat16 fileSystemFAT16) throws IOException, NotEnoughBytesReadException
 	{
@@ -118,6 +130,20 @@ public class MainView extends JFrame implements ActionListener {
 	        };
 	    };
 	    
+	    //
+	    modelSelectedFiles.addColumn("Filename");
+		modelSelectedFiles.addColumn("Size");
+		modelSelectedFiles.addColumn("Clusters required");
+		
+	  	tableSelectedFiles = new JTable(modelSelectedFiles){
+	        private static final long serialVersionUID = 1L;
+	        
+	        //Disable editing
+	        public boolean isCellEditable(int row, int column) {                
+	                return false;               
+	        };
+	    };
+	    
 		//Create the menu bar.
 		menuBar = new JMenuBar();
 		
@@ -139,7 +165,7 @@ public class MainView extends JFrame implements ActionListener {
 		this.setJMenuBar(menuBar);
 		
 		container = getContentPane();
-		container.setLayout(new GridLayout(4, 1));
+		container.setLayout(new GridLayout(6, 1));
 		
 		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData("CF","","","","","","","","","",true));
 		
@@ -152,7 +178,7 @@ public class MainView extends JFrame implements ActionListener {
 		
 		//rootNode.add(incomeNode);
 		
-		JXTreeTable binTree = new JXTreeTable(new MyTreeModel(rootNode));
+		binTree = new JXTreeTable(new MyTreeModel(rootNode));
     	
     	Highlighter highligher = HighlighterFactory.createSimpleStriping(HighlighterFactory.BEIGE);
     	binTree.setHighlighters(highligher);
@@ -160,6 +186,12 @@ public class MainView extends JFrame implements ActionListener {
         binTree.setShowsRootHandles(true);
         configureCommonTableProperties(binTree);
         binTree.setTreeCellRenderer(new TreeTableCellRenderer());
+        
+        //---------
+        binTree.addMouseListener(this);
+        
+        //--------
+        
         
         //this.getContentPane().add(new JScrollPane(binTree));
         container.add(new JScrollPane(binTree));
@@ -200,8 +232,16 @@ public class MainView extends JFrame implements ActionListener {
         
         container.add(infoContainer);
         
+        //
+        container.add(new JScrollPane(tableSelectedFiles));
+        
         //Data loading
         container.add(new JScrollPane(tableLoadedData));
+        
+      //---------------------------------------------------------
+        buttonHide.addActionListener(this);
+        panelButtons.add(buttonHide);
+        container.add(panelButtons);
         
         //---------------------------------------------------------
         DataTableComponent dataTableComponent = new DataTableComponent(dataContainer, fileSystemFAT16);
@@ -316,7 +356,79 @@ public class MainView extends JFrame implements ActionListener {
 			    modelLoadedData.addRow(new Object[]{fileToLoadData.getAbsolutePath(), OutputFormater.formatOutput(fileToLoadData.length()), (long)Math.ceil((double)fileToLoadData.length() / (double)bytesPerAllocationUnit)});
 			}
 		}
+		else if (e.getSource() == buttonHide)
+		{
+			//if (fileToLoadData == null)
+			//	return;
+			
+			int [] selectedRows = binTree.getSelectedRows();
+	        
+	        System.out.print("selectedRows: ");
+	        for (int i = 0; i < selectedRows.length; i++)
+	        	System.out.print(selectedRows[i] + " ");
+	        System.out.println();
+	        
+	        if (selectedRows.length > 0)
+	        {
+	        	//System.out.println(binTree.getValueAt(viewRow, viewColumn));
+	        	
+	        	for (int i = 0; i < selectedRows.length; i++)
+	        	{
+	        		System.out.println(binTree.getValueAt(selectedRows[i], 0));
+	        	}
+	        	System.out.println();
+	        	
+	        	/*
+	        	long bytesPerAllocationUnit = (long)bootBlock16.getBPB_BytsPerSec() * (long)bootBlock16.getBPB_SecPerClus();
+	        	Object[] object = new Object[] {
+	        			fileToLoadData.getAbsolutePath(), 
+	        			OutputFormater.formatOutput(fileToLoadData.length()), 
+	        			(long)Math.ceil((double)fileToLoadData.length() / (double)bytesPerAllocationUnit)
+	        			};
+	        	
+			    modelSelectedFiles.addRow(object);
+			    */
+	        }
+			
+		}
     }
+
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+		if (arg0.getSource() == binTree)
+		{	
+			//int viewRow = binTree.getSelectedRow();
+	        //int viewColumn = binTree.getSelectedColumn();
+	        
+	        
+	        
+			
+		}
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
 }
 
 //-------------------------------------------------------------------------------
