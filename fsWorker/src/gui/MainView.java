@@ -11,6 +11,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -73,6 +74,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	
 	//Other
 	private long totalSlackFileSizeInBytes = 0;
+	private long selectedSlackFileSizeInBytes = 0;
 	
 	private Container container;
 	private Container infoContainer = new Container();
@@ -87,6 +89,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	
 	//Data loading
 	File fileToLoadData = null;
+	private long fileToLoadDataLength = 0;
 	private JTable tableLoadedData;
 	private DefaultTableModel modelLoadedData = new DefaultTableModel();
 	
@@ -94,7 +97,10 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private DefaultTableModel modelSelectedFiles = new DefaultTableModel();
 	
 	private JPanel panelButtons = new JPanel();
-	private JButton buttonHide = new JButton("Hide");
+	private JButton buttonAdd = new JButton("Add");
+	private JButton buttonClear = new JButton("Clear");
+	private JButton buttonWriteToFileSlack = new JButton("Write to file slack");
+	private JLabel labelSelectedSlackSize = new JLabel("Selected file slack size in bytes: 0 B / 0 B");
 	
 	public MainView(String title, FileSystemFat16 fileSystemFAT16) throws IOException, NotEnoughBytesReadException
 	{
@@ -131,9 +137,13 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	    };
 	    
 	    //
-	    modelSelectedFiles.addColumn("Filename");
-		modelSelectedFiles.addColumn("Size");
-		modelSelectedFiles.addColumn("Clusters required");
+	    modelSelectedFiles.addColumn("File");
+	    modelSelectedFiles.addColumn("Long Filename (VFAT)");
+		modelSelectedFiles.addColumn("Starting Cluster Number");
+		modelSelectedFiles.addColumn("File size in Bytes");
+		modelSelectedFiles.addColumn("Total clusters needed for data");
+		modelSelectedFiles.addColumn("Total allocated size in Bytes");
+		modelSelectedFiles.addColumn("File slack size in Bytes");
 		
 	  	tableSelectedFiles = new JTable(modelSelectedFiles){
 	        private static final long serialVersionUID = 1L;
@@ -154,7 +164,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		        "File menu");
 		menuBar.add(menu);
 		
-		menuItemOpenData = new JMenuItem("Open data", KeyEvent.VK_I);
+		menuItemOpenData = new JMenuItem("Load data file", KeyEvent.VK_I);
 		menuItemOpenData.addActionListener(this);
 		menu.add(menuItemOpenData);
 		
@@ -167,7 +177,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		container = getContentPane();
 		container.setLayout(new GridLayout(6, 1));
 		
-		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData("CF","","","","","","","","","",true));
+		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData(null,"CF","","","","","","","","","",true));
 		
 		//ArrayList<FatEntry> filesInFolder = fat16Directory.directory();
 		ArrayList<FatEntry> filesInFolder = fileSystemFAT16.ls();
@@ -239,8 +249,17 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         container.add(new JScrollPane(tableLoadedData));
         
       //---------------------------------------------------------
-        buttonHide.addActionListener(this);
-        panelButtons.add(buttonHide);
+        buttonAdd.addActionListener(this);
+        panelButtons.add(buttonAdd);
+        
+        buttonClear.addActionListener(this);
+        panelButtons.add(buttonClear);
+        
+        buttonWriteToFileSlack.addActionListener(this);
+        panelButtons.add(buttonWriteToFileSlack);
+        
+        panelButtons.add(labelSelectedSlackSize);
+        
         container.add(panelButtons);
         
         //---------------------------------------------------------
@@ -280,12 +299,12 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			//If file
 			if (!file.isSubdirectoryEntry())
 			{
-				treeNode.add(new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,longFilename,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,false)));
+				treeNode.add(new DefaultMutableTreeNode(new TableRowData(file, filename,filenameExtension,longFilename,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,false)));
 			}
 			//If directory
 			else
 			{
-				DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(filename,filenameExtension,longFilename,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,true));
+				DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(file, filename,filenameExtension,longFilename,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,true));
 						
 				//Ignore . and .. in search
 				if (filename.compareToIgnoreCase(".") != 0 && filename.compareToIgnoreCase("..") != 0)
@@ -351,12 +370,15 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	            for( int i = modelLoadedData.getRowCount() - 1; i >= 0; i-- ) {
 	            	modelLoadedData.removeRow(i);
 	            }
-			    
+	            
 			    long bytesPerAllocationUnit = (long)bootBlock16.getBPB_BytsPerSec() * (long)bootBlock16.getBPB_SecPerClus();
 			    modelLoadedData.addRow(new Object[]{fileToLoadData.getAbsolutePath(), OutputFormater.formatOutput(fileToLoadData.length()), (long)Math.ceil((double)fileToLoadData.length() / (double)bytesPerAllocationUnit)});
+			    
+			    fileToLoadDataLength = fileToLoadData.length();
+			    updateLabelSelectedSlackSize();
 			}
 		}
-		else if (e.getSource() == buttonHide)
+		else if (e.getSource() == buttonAdd)
 		{
 			//if (fileToLoadData == null)
 			//	return;
@@ -374,7 +396,47 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	        	
 	        	for (int i = 0; i < selectedRows.length; i++)
 	        	{
-	        		System.out.println(binTree.getValueAt(selectedRows[i], 0));
+	        		Fat16Entry file = (Fat16Entry)binTree.getValueAt(selectedRows[i], 0);
+	        		
+	        		//Add only files (no folders)
+	        		if (!file.isSubdirectoryEntry())
+	        		{
+		        		//System.out.println(binTree.getValueAt(selectedRows[i], 0));
+		        		
+	        			boolean unique = true;
+		        		for (int j = 0; j < tableSelectedFiles.getRowCount(); j++)
+		        		{
+		        			//System.out.println(tableSelectedFiles.getValueAt(j, 0));
+		        			Fat16Entry alreadyIncludedFile = (Fat16Entry)tableSelectedFiles.getValueAt(j, 0);
+		        			
+		        			if (alreadyIncludedFile == file)
+		        			{
+		        				unique = false;
+		        				break;
+		        			}
+		        		}
+		        		
+		        		if (unique)
+		        		{
+			        		Object[] row = new Object[7];
+			        		row[0] = file;
+			        		row[1] = file.getLongFileName();
+			        		row[2] = Long.toString((long)file.getStartingClusterNumber());
+			        		row[3] = OutputFormater.formatOutput(file.getFilesizeInBytes());
+			        		long totalClustersNeededForData = file.getTotalClustersNeededForData();
+			        		row[4] = Long.toString(totalClustersNeededForData);
+			        		long totalAllocatedSizeInBytes = totalClustersNeededForData * dataRegion16.getBytesPerCluster();
+			        		row[5] = OutputFormater.formatOutput(totalAllocatedSizeInBytes);
+			        		row[6] = OutputFormater.formatOutput(file.getFileSlackSizeInBytes());
+			        		
+			        		modelSelectedFiles.addRow(row);
+			        		
+			        		//Update label
+			        		selectedSlackFileSizeInBytes += file.getFileSlackSizeInBytes();
+			        		//labelSelectedSlackSize.setText("Selected file slack size in bytes: " + OutputFormater.formatOutput(selectedSlackFileSizeInBytes));
+			        		updateLabelSelectedSlackSize();
+		        		}
+	        		}
 	        	}
 	        	System.out.println();
 	        	
@@ -391,8 +453,108 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	        }
 			
 		}
+		else if (e.getSource() == buttonClear)
+		{
+			//Update label
+			selectedSlackFileSizeInBytes = 0;
+			//labelSelectedSlackSize.setText("Selected file slack size in bytes: " + OutputFormater.formatOutput(selectedSlackFileSizeInBytes));
+			updateLabelSelectedSlackSize();
+			
+			//Empty tableSelectedFiles table
+            for( int i = modelSelectedFiles.getRowCount() - 1; i >= 0; i-- ) {
+            	modelSelectedFiles.removeRow(i);
+            }
+		}
+		else if (e.getSource() == buttonWriteToFileSlack)
+		{
+			if (fileToLoadData == null)
+			{
+				errorBox("No data file loaded!", "Load data file");
+				return;
+			}
+			
+			long dataFileLengthInBytes = fileToLoadData.length();
+			
+			if (dataFileLengthInBytes > selectedSlackFileSizeInBytes)
+			{
+				errorBox("Not enough slack file space!", "Not enough space");
+				return;
+			}
+			
+			try
+			{
+				FileInputStream fileInputStream = new FileInputStream(fileToLoadData);
+				
+				long bytesRemaining = fileToLoadData.length();
+				for (int i = 0; i < modelSelectedFiles.getRowCount(); i++)
+				{
+					System.out.println(modelSelectedFiles.getValueAt(i, 0));
+					
+					Fat16Entry fat16Entry = (Fat16Entry)modelSelectedFiles.getValueAt(i, 0);
+					
+					long fileSlackSizeInBytes = fat16Entry.getFileSlackSizeInBytes();
+					System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
+					
+					long numberOfBytesToRead;
+					if (bytesRemaining >= fileSlackSizeInBytes)
+					{
+						System.out.println("a");
+						numberOfBytesToRead = fileSlackSizeInBytes;
+					}
+					else
+					{
+						System.out.println("b");
+						numberOfBytesToRead = bytesRemaining;
+					}
+					
+					System.out.println("numberOfBytesToRead: " + numberOfBytesToRead);
+					
+					byte[] writeBuffer = new byte[(int)fileSlackSizeInBytes];
+					
+					int numBytesRead = fileInputStream.read(writeBuffer, 0, (int)numberOfBytesToRead);
+					
+					System.out.println("writeBuffer.length: " + writeBuffer.length);
+					
+					if (numBytesRead != (int)numberOfBytesToRead)
+					{
+						errorBox("Error reading data file!", "Error reading");
+						return;
+					}
+					
+					fat16Entry.writeToFileSlack(writeBuffer);
+					
+					bytesRemaining -= numberOfBytesToRead;
+					
+					if (bytesRemaining == 0)
+						break;
+				}
+				
+				System.out.println("bytesRemaining: " + bytesRemaining);
+				
+				fileInputStream.close();
+			}
+			catch (Exception exc)
+			{
+				System.out.println(exc);
+			}
+		}
     }
-
+	
+	public void updateLabelSelectedSlackSize()
+	{
+		labelSelectedSlackSize.setText("Selected file slack size in bytes: " + OutputFormater.formatOutput(selectedSlackFileSizeInBytes) + " / " + OutputFormater.formatOutput(fileToLoadDataLength));
+	}
+	
+	public static void errorBox(String content, String title)
+    {
+        JOptionPane.showMessageDialog(null, content, title, JOptionPane.ERROR_MESSAGE);
+    }
+	
+	public static void infoBox(String infoMessage, String location)
+    {
+        JOptionPane.showMessageDialog(null, infoMessage, "InfoBox: " + location, JOptionPane.INFORMATION_MESSAGE);
+    }
+	
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
 		if (arg0.getSource() == binTree)
