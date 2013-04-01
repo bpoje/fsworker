@@ -105,10 +105,10 @@ public class Fat16EntryLongFileName extends FatEntry {
 		//Unicode character array to string
 		for (int i = 0; i < unicodeChar.length; i++)
 		{
-			unicodeString += unicodeChar[i];
-			
 			if ((int)unicodeChar[i] == 0)
 				break;
+			
+			unicodeString += unicodeChar[i];
 		}
 		
 		//System.out.println("unicodeString: " + unicodeString);
