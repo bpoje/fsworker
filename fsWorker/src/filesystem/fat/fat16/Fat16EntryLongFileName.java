@@ -42,8 +42,8 @@ public class Fat16EntryLongFileName extends FatEntry {
 	private String unicodeString = "";
 
 	public Fat16EntryLongFileName(BootBlock bootBlock, FileAllocationTable fileAllocationTable, DataRegion dataRegion, char entryNumber, long entryAddress,
-			FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
-		super(bootBlock, fileAllocationTable, dataRegion, entryNumber, entryAddress, fileSystemIO);
+			FileSystemIO fileSystemIO, String directoryPath) throws IOException, NotEnoughBytesReadException {
+		super(bootBlock, fileAllocationTable, dataRegion, entryNumber, entryAddress, fileSystemIO, directoryPath);
 
 		readLFNNumber();
 	}

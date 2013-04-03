@@ -139,6 +139,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	    //
 	    modelSelectedFiles.addColumn("File");
 	    modelSelectedFiles.addColumn("Long Filename (VFAT)");
+	    modelSelectedFiles.addColumn("Directory Path");
 		modelSelectedFiles.addColumn("Starting Cluster Number");
 		modelSelectedFiles.addColumn("File size in Bytes");
 		modelSelectedFiles.addColumn("Total clusters needed for data");
@@ -177,7 +178,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		container = getContentPane();
 		container.setLayout(new GridLayout(6, 1));
 		
-		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData(null,"CF","","","","","","","","","",true));
+		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData(null,"CF","","","","","","","","","","",true));
 		
 		//ArrayList<FatEntry> filesInFolder = fat16Directory.directory();
 		ArrayList<FatEntry> filesInFolder = fileSystemFAT16.ls();
@@ -272,6 +273,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	
 	private void scanFileSystem(ArrayList<FatEntry> files, DefaultMutableTreeNode treeNode) throws IOException, NotEnoughBytesReadException
 	{
+		//Search
 		//For all files (some may be directories)
 		for (int i = 0; i < files.size(); i++)
 		{
@@ -295,16 +297,17 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			String sTotalClustersNeededForData = Long.toString(totalClustersNeededForData);
 			String sTotalAllocatedSizeInBytes = OutputFormater.formatOutput(totalAllocatedSizeInBytes);
 			String sFileSlackSizeInBytes = OutputFormater.formatOutput(fileSlackSizeInBytes);
+			String directoryPath = file.getDirectoryPath();
 			
 			//If file
 			if (!file.isSubdirectoryEntry())
 			{
-				treeNode.add(new DefaultMutableTreeNode(new TableRowData(file, filename,filenameExtension,longFilename,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,false)));
+				treeNode.add(new DefaultMutableTreeNode(new TableRowData(file, filename,filenameExtension,longFilename,directoryPath,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,false)));
 			}
 			//If directory
 			else
 			{
-				DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(file, filename,filenameExtension,longFilename,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,true));
+				DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(file, filename,filenameExtension,longFilename,directoryPath,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,true));
 						
 				//Ignore . and .. in search
 				if (filename.compareToIgnoreCase(".") != 0 && filename.compareToIgnoreCase("..") != 0)
@@ -316,6 +319,22 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				}
 				
 				treeNode.add(subNode);
+			}
+		}
+		
+		//Return to previous directory through ..
+		//For all files (some may be directories)
+		for (int i = 0; i < files.size(); i++)
+		{
+			Fat16Entry file = (Fat16Entry)files.get(i);
+			String filename = file.getFilename();
+			
+			//If directory
+			if (file.isSubdirectoryEntry())
+			{
+				//If directory is ..
+				if (filename.compareToIgnoreCase("..") == 0)
+					fileSystemFAT16.cd(file);
 			}
 		}
 	}
@@ -418,16 +437,17 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		        		
 		        		if (unique)
 		        		{
-			        		Object[] row = new Object[7];
+			        		Object[] row = new Object[8];
 			        		row[0] = file;
 			        		row[1] = file.getLongFileName();
-			        		row[2] = Long.toString((long)file.getStartingClusterNumber());
-			        		row[3] = OutputFormater.formatOutput(file.getFilesizeInBytes());
+			        		row[2] = file.getDirectoryPath();
+			        		row[3] = Long.toString((long)file.getStartingClusterNumber());
+			        		row[4] = OutputFormater.formatOutput(file.getFilesizeInBytes());
 			        		long totalClustersNeededForData = file.getTotalClustersNeededForData();
-			        		row[4] = Long.toString(totalClustersNeededForData);
+			        		row[5] = Long.toString(totalClustersNeededForData);
 			        		long totalAllocatedSizeInBytes = totalClustersNeededForData * dataRegion16.getBytesPerCluster();
-			        		row[5] = OutputFormater.formatOutput(totalAllocatedSizeInBytes);
-			        		row[6] = OutputFormater.formatOutput(file.getFileSlackSizeInBytes());
+			        		row[6] = OutputFormater.formatOutput(totalAllocatedSizeInBytes);
+			        		row[7] = OutputFormater.formatOutput(file.getFileSlackSizeInBytes());
 			        		
 			        		modelSelectedFiles.addRow(row);
 			        		

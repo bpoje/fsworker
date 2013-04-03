@@ -10,6 +10,8 @@ import filesystem.io.FileSystemIO;
 public class FatEntry extends FileSystemEntry {
 	protected char entryNumber;
 	protected long entryAddress;
+	
+	protected String directoryPath;
 
 	protected boolean isReadOnlyFile;
 	protected boolean isHiddenFile;
@@ -37,13 +39,14 @@ public class FatEntry extends FileSystemEntry {
 	public static final long rootDirectoryEntrySize = 32; // bytes
 
 	//public FatEntry(char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
-	public FatEntry(BootBlock bootBlock, FileAllocationTable fileAllocationTable, DataRegion dataRegion, char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
+	public FatEntry(BootBlock bootBlock, FileAllocationTable fileAllocationTable, DataRegion dataRegion, char entryNumber, long entryAddress, FileSystemIO fileSystemIO, String directoryPath) throws IOException, NotEnoughBytesReadException {
 		this.bootBlock = bootBlock;
 		this.fileAllocationTable = fileAllocationTable;
 		this.dataRegion = dataRegion;
 		this.entryNumber = entryNumber;
 		this.entryAddress = entryAddress;
 		this.fileSystemIO = fileSystemIO;
+		this.directoryPath = directoryPath;
 		
 		decodeAttributes();
 		decodeFilenameStatus();
@@ -215,5 +218,9 @@ public class FatEntry extends FileSystemEntry {
 
 	public FilenameStatus getFilenameStatus() {
 		return filenameStatus;
+	}
+
+	public String getDirectoryPath() {
+		return directoryPath;
 	}
 }

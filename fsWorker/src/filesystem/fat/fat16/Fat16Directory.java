@@ -183,7 +183,7 @@ public class Fat16Directory extends FatDirectory {
 	}
 	*/
 	
-	public ArrayList<FatEntry> subDirectory(long address) throws IOException, NotEnoughBytesReadException
+	public ArrayList<FatEntry> subDirectory(long address, String currentDirectoryPath) throws IOException, NotEnoughBytesReadException
 	{
 		DataRegion16 dataRegion16 = (DataRegion16)dataRegion;
 		FileAllocationTable16 fileAllocationTable16 = (FileAllocationTable16)fileAllocationTable;
@@ -201,7 +201,7 @@ public class Fat16Directory extends FatDirectory {
 			long entryAddress = calculateSubDirectoryEntryAddress(address, (char)entryNumber);
 			
 			//FatEntry entry = new FatEntry((char) entryNumber, entryAddress, this.fileSystemIO);
-			FatEntry entry = new FatEntry(bootBlock, fileAllocationTable, dataRegion, (char) entryNumber, entryAddress, this.fileSystemIO);
+			FatEntry entry = new FatEntry(bootBlock, fileAllocationTable, dataRegion, (char) entryNumber, entryAddress, this.fileSystemIO, currentDirectoryPath);
 			
 			//bootBlock, fileAllocationTable, dataRegion, 
 			
@@ -223,7 +223,7 @@ public class Fat16Directory extends FatDirectory {
 			{
 				if (entry.isLongFilenameEntry())
 				{
-					Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO);
+					Fat16EntryLongFileName longFileNameEntry = new Fat16EntryLongFileName(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO, currentDirectoryPath);
 					//System.out.println("longFileNameEntry.isLast(): " + longFileNameEntry.isLast());
 					
 					//Add long file name entry to arraylist
@@ -231,16 +231,16 @@ public class Fat16Directory extends FatDirectory {
 					
 					char lfnNumber = longFileNameEntry.getLFNNumber();
 					boolean lfnLast = longFileNameEntry.isLast();
-					System.out.println("lfnNumber: " + (int)lfnNumber + ", lfnLast: " + lfnLast);
+					//System.out.println("lfnNumber: " + (int)lfnNumber + ", lfnLast: " + lfnLast);
 				}
 				else
 				{
-					Fat16Entry dosFilename = new Fat16Entry(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO);
+					Fat16Entry dosFilename = new Fat16Entry(bootBlock, fileAllocationTable, dataRegion, (char)entryNumber, entryAddress, this.fileSystemIO, currentDirectoryPath);
 					boolean isSubdirectory = dosFilename.isSubdirectoryEntry();
 					
 					//----------------------------------------------------------------
 					//VFAT
-					System.out.println("lfnEntryList.size(): " + lfnEntryList.size() + " " + dosFilename.getFilename());
+					//System.out.println("lfnEntryList.size(): " + lfnEntryList.size() + " " + dosFilename.getFilename());
 					
 					//Depending on the length of the long filename, the system will create a number of
 					//invalid 8.3 entries in the Directory Table, these are the LFN (Long Filename)
@@ -275,7 +275,7 @@ public class Fat16Directory extends FatDirectory {
 						{
 							longFileName += lfnEntryList.get(i).getUnicodeString();
 						}
-						System.out.println("longFileName: " + longFileName);
+						//System.out.println("longFileName: " + longFileName);
 						
 						dosFilename.setLongFileName(longFileName);
 					}

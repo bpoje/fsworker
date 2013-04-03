@@ -3,6 +3,7 @@ package filesystem.fat.fat16;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import filesystem.FileSystemEntry;
 import filesystem.exception.NotEnoughBytesReadException;
@@ -17,6 +18,7 @@ public class FileSystemFat16 extends FileSystemFat{
 
 	protected int currentDirectoryDepth = 0;
 	protected long currentDirectoryAddress = 0;
+	protected String currentDirectoryPath = "/";
 	
 	public FileSystemFat16(String filenameFSImage, FileSystemIO fileSystemIO) throws IllegalArgumentException, IOException, NotEnoughBytesReadException
 	{		
@@ -40,7 +42,7 @@ public class FileSystemFat16 extends FileSystemFat{
 		
 		//ArrayList<FatEntry> filesInFolder = fat16Directory.directory();
 		
-		ArrayList<FatEntry> filesInFolder = fat16Directory.subDirectory(currentDirectoryAddress);
+		ArrayList<FatEntry> filesInFolder = fat16Directory.subDirectory(currentDirectoryAddress,currentDirectoryPath);
 		
 		//System.out.println(filesInFolder.size());
 		
@@ -73,6 +75,8 @@ public class FileSystemFat16 extends FileSystemFat{
 		if (!dosFilename.isSubdirectoryEntry())
 			return false;
 		
+		//System.out.println("cd dosFilename: " + dosFilename.getLongFileName() + ", currentDirectoryPath: " + this.currentDirectoryPath);
+		
 		/*
 		System.out.println("isSubdirectoryEntry: " + dosFilename.isSubdirectoryEntry());
 			long adr = dataRegion16.getClusterAddress(dosFilename.getStartingClusterNumber());
@@ -102,6 +106,16 @@ public class FileSystemFat16 extends FileSystemFat{
 		if (dosFilename.getFilename().compareToIgnoreCase("..") == 0)
 		{
 			currentDirectoryDepth--;
+			
+			//Adjust path string
+			StringBuilder stringBuilder = new StringBuilder(this.currentDirectoryPath);
+			
+			//Remove '/' at the end of string
+			stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+			
+			stringBuilder.replace(stringBuilder.lastIndexOf("/"), stringBuilder.length(), "/");
+			
+			this.currentDirectoryPath = stringBuilder.toString();
 		}
 		else if (dosFilename.getFilename().compareToIgnoreCase(".") == 0)
 		{
@@ -110,6 +124,9 @@ public class FileSystemFat16 extends FileSystemFat{
 		else
 		{
 			currentDirectoryDepth++;
+			
+			//Adjust path string
+			this.currentDirectoryPath += dosFilename.getLongFileName() + "/";
 		}
 		
 		//Fat16:
@@ -156,6 +173,15 @@ public class FileSystemFat16 extends FileSystemFat{
 		//ArrayList<FatEntry> list = fat16Directory.subDirectory(currentDirectoryAddress);
 		//System.out.println("---------------------------------------------------------");
 		
+		//System.out.println("currentDirectoryPath: " + this.currentDirectoryPath);
+		/*
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
 		return true;
 	}
 
@@ -370,5 +396,17 @@ public class FileSystemFat16 extends FileSystemFat{
 	public byte[] getClusterData(char clusterNumber) throws IOException, NotEnoughBytesReadException
 	{
 		return ((DataRegion16)dataRegion).getClusterData(clusterNumber);
+	}
+
+	public int getCurrentDirectoryDepth() {
+		return currentDirectoryDepth;
+	}
+
+	public long getCurrentDirectoryAddress() {
+		return currentDirectoryAddress;
+	}
+
+	public String getCurrentDirectoryPath() {
+		return currentDirectoryPath;
 	}
 }

@@ -50,8 +50,8 @@ public class Fat16Entry extends FatEntry {
 	 * isArchiveFlag;
 	 */
 
-	public Fat16Entry(BootBlock bootBlock, FileAllocationTable fileAllocationTable, DataRegion dataRegion, char entryNumber, long entryAddress, FileSystemIO fileSystemIO) throws IOException, NotEnoughBytesReadException {
-		super(bootBlock, fileAllocationTable, dataRegion, entryNumber, entryAddress, fileSystemIO);
+	public Fat16Entry(BootBlock bootBlock, FileAllocationTable fileAllocationTable, DataRegion dataRegion, char entryNumber, long entryAddress, FileSystemIO fileSystemIO, String directoryPath) throws IOException, NotEnoughBytesReadException {
+		super(bootBlock, fileAllocationTable, dataRegion, entryNumber, entryAddress, fileSystemIO, directoryPath);
 		
 		this.longFileName = ""; //Init LFN
 		

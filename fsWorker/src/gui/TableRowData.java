@@ -7,6 +7,7 @@ public class TableRowData {
 	private String filename;
 	private String filenameExtension;
 	private String longFilename;
+	private String directoryPath;
 	private String startingClusterNumber;
 	private String filesizeInBytes;
 	private String totalClustersNeededForData;
@@ -20,6 +21,7 @@ public class TableRowData {
 			String filename,
 			String filenameExtension,
 			String longFilename,
+			String directoryPath,
 			String startingClusterNumber, String filesizeInBytes,
 			String totalClustersNeededForData,
 			String totalAllocatedSizeInBytes, String fileSlackSizeInBytes,
@@ -28,6 +30,7 @@ public class TableRowData {
 		this.filename = filename;
 		this.filenameExtension = filenameExtension;
 		this.longFilename = longFilename;
+		this.directoryPath = directoryPath;
 		this.startingClusterNumber = startingClusterNumber;
 		this.filesizeInBytes = filesizeInBytes;
 		this.totalClustersNeededForData = totalClustersNeededForData;
@@ -130,5 +133,11 @@ public class TableRowData {
 	}
 	public void setLongFilename(String longFilename) {
 		this.longFilename = longFilename;
+	}
+	public String getDirectoryPath() {
+		return directoryPath;
+	}
+	public void setDirectoryPath(String directoryPath) {
+		this.directoryPath = directoryPath;
 	}
 }
