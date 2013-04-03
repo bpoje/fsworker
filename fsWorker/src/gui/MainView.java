@@ -27,6 +27,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 
@@ -102,6 +103,11 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private JButton buttonWriteToFileSlack = new JButton("Write to file slack");
 	private JLabel labelSelectedSlackSize = new JLabel("Selected file slack size in bytes: 0 B / 0 B");
 	
+	//Output
+	private String textAreaString = "";
+	private JTextAreaWithScroll textAreaWithScroll = new JTextAreaWithScroll (JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+            JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+	
 	public MainView(String title, FileSystemFat16 fileSystemFAT16) throws IOException, NotEnoughBytesReadException
 	{
 		//Set window title
@@ -176,7 +182,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		this.setJMenuBar(menuBar);
 		
 		container = getContentPane();
-		container.setLayout(new GridLayout(6, 1));
+		container.setLayout(new GridLayout(7, 1));
 		
 		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData(null,"CF","","","","","","","","","","",true));
 		
@@ -260,6 +266,9 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         panelButtons.add(buttonWriteToFileSlack);
         
         panelButtons.add(labelSelectedSlackSize);
+        
+        container.add(textAreaWithScroll.getScrollPane());
+        textAreaWithScroll.setEditable(false);
         
         container.add(panelButtons);
         
@@ -501,9 +510,18 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				return;
 			}
 			
+			//Clear text log output
+			textAreaString = "";
+			textAreaWithScroll.setText(textAreaString);
+			
 			try
 			{
 				FileInputStream fileInputStream = new FileInputStream(fileToLoadData);
+				
+				//Text log output
+				textAreaString += "Input file:" + fileToLoadData.getName() + "/" + fileToLoadData.length() + "\n";
+				textAreaString += "Hidden in:\n";
+				textAreaWithScroll.setText(textAreaString);
 				
 				long bytesRemaining = fileToLoadData.length();
 				for (int i = 0; i < modelSelectedFiles.getRowCount(); i++)
@@ -544,6 +562,10 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 					fat16Entry.writeToFileSlack(writeBuffer);
 					
 					bytesRemaining -= numberOfBytesToRead;
+					
+					//Text log output
+					textAreaString += numberOfBytesToRead + "/" + fat16Entry.getFileSlackSizeInBytes() + "/" + fat16Entry.getDirectoryPath() + fat16Entry.getLongFileName() + "\n";
+					textAreaWithScroll.setText(textAreaString);
 					
 					if (bytesRemaining == 0)
 						break;
@@ -611,6 +633,21 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		// TODO Auto-generated method stub
 		
 	}
+}
+
+class JTextAreaWithScroll extends JTextArea
+{
+    private JScrollPane scrollPane;
+
+    public JTextAreaWithScroll (int vsbPolicy, int hsbPolicy)
+    {
+        scrollPane = new JScrollPane (this, vsbPolicy, hsbPolicy);
+    }
+
+    public JScrollPane getScrollPane ()
+    {
+        return scrollPane;
+    }
 }
 
 //-------------------------------------------------------------------------------
