@@ -514,6 +514,10 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
             for( int i = modelSelectedFiles.getRowCount() - 1; i >= 0; i-- ) {
             	modelSelectedFiles.removeRow(i);
             }
+            
+            //Clear text log output
+			textAreaString = "";
+			textAreaWithScroll.setText(textAreaString);
 		}
 		else if (e.getSource() == buttonWriteToFileSlack)
 		{
@@ -585,7 +589,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 					bytesRemaining -= numberOfBytesToRead;
 					
 					//Text log output
-					textAreaString += numberOfBytesToRead + "/" + fat16Entry.getFileSlackSizeInBytes() + fat16Entry.getDirectoryPath() + fat16Entry.getLongFileName() + "\n";
+					textAreaString += numberOfBytesToRead + "/" + fat16Entry.getFileSlackSizeInBytes() + "/" + fat16Entry.readFromFileSlack().getMd5() + fat16Entry.getDirectoryPath() + fat16Entry.getLongFileName() + "\n";
 					textAreaWithScroll.setText(textAreaString);
 					
 					if (bytesRemaining == 0)
@@ -686,8 +690,8 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				{
 					StringTokenizer rowTokenizer = new StringTokenizer(row, "/");
 					
-					//Row should consist of at least 3 tokens
-					if (rowTokenizer.countTokens() < 3)
+					//Row should consist of at least 4 tokens
+					if (rowTokenizer.countTokens() < 4)
 					{errorBox("Parse error!", "Parse error");return;}
 					
 					try {
@@ -702,9 +706,12 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 						if (slackSpaceUsedInBytes > slackSpaceTotalInBytes)
 						{errorBox("Parse error!", "Parse error");return;}
 						
+						String fileSlackSpaceMd5 = rowTokenizer.nextToken();
+						System.out.println("fileSlackSpaceMd5: " + fileSlackSpaceMd5);
+						
 						String filePath = "";
-						//-3 as we called nextToken() twice and want to ignore the filename
-						for (int i = 0; i < numberOfTokens - 3; i++)
+						//-4 as we called nextToken() three times and want to ignore the filename
+						for (int i = 0; i < numberOfTokens - 4; i++)
 						{
 							filePath += "/" + rowTokenizer.nextToken();
 						}
@@ -797,14 +804,9 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				
 				//Hash of restored file IS EQUAL to hash of original file
 				if (outputFileHash.compareToIgnoreCase(originalFileHash) == 0)
-				{
-					//success
 					infoBox("Success! Restored file hash == original file hash.\nFile: " + outputFile.getAbsolutePath() + " was created.", "Success");
-				}
 				else
-				{
 					errorBox("Restored file hash != original file hash", "Parse error");return;
-				}
 				
 			}
 			catch (IOException ioException)
