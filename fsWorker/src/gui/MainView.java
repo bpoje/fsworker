@@ -12,9 +12,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
@@ -50,6 +53,8 @@ import filesystem.fat.fat16.Fat16Directory;
 import filesystem.fat.fat16.Fat16Entry;
 import filesystem.fat.fat16.FileAllocationTable16;
 import filesystem.fat.fat16.FileSystemFat16;
+import filesystem.hash.Hash;
+import filesystem.io.DataTransfer;
 import filesystem.utils.OutputFormater;
 
 import javax.swing.JScrollPane;
@@ -90,6 +95,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	
 	//Data loading
 	File fileToLoadData = null;
+	private String fileToLoadDataMd5 = "";
 	private long fileToLoadDataLength = 0;
 	private JTable tableLoadedData;
 	private DefaultTableModel modelLoadedData = new DefaultTableModel();
@@ -102,6 +108,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private JButton buttonClear = new JButton("Clear");
 	private JButton buttonWriteToFileSlack = new JButton("Write to file slack");
 	private JLabel labelSelectedSlackSize = new JLabel("Selected file slack size in bytes: 0 B / 0 B");
+	private JButton buttonReadFromFileSlack = new JButton("Read from file slack");
 	
 	//Output
 	private String textAreaString = "";
@@ -132,6 +139,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		modelLoadedData.addColumn("Filename");
 		modelLoadedData.addColumn("Size");
 		modelLoadedData.addColumn("Clusters required");
+		modelLoadedData.addColumn("Md5 of data file");
 		
 	  	tableLoadedData = new JTable(modelLoadedData){
 	        private static final long serialVersionUID = 1L;
@@ -267,8 +275,11 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         
         panelButtons.add(labelSelectedSlackSize);
         
+        buttonReadFromFileSlack.addActionListener(this);
+        panelButtons.add(buttonReadFromFileSlack);
+        
         container.add(textAreaWithScroll.getScrollPane());
-        textAreaWithScroll.setEditable(false);
+        //textAreaWithScroll.setEditable(false);
         
         container.add(panelButtons);
         
@@ -390,6 +401,11 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			//JFileChooser.APPROVE_OPTION: the user accepts file selection.
 			//JFileChooser.ERROR_OPTION: if there’s an error or the user closes the dialog by clicking on X button.
 			if (userSelection == JFileChooser.APPROVE_OPTION) {
+				if (fileChooser.getSelectedFile().length() <= 0)
+			    {
+			    	errorBox("File is empty! No data loaded.", "Empty file");return;
+			    }
+				
 				fileToLoadData = fileChooser.getSelectedFile();
 			    System.out.println("Open as file: " + fileToLoadData.getAbsolutePath());
 			    System.out.println("length in bytes: " + fileToLoadData.length());
@@ -399,8 +415,13 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	            	modelLoadedData.removeRow(i);
 	            }
 	            
+	            //Calculate hash of file
+	            String md5 = Hash.getMd5FromFile(fileToLoadData);
+	            System.out.println("md5: " + md5);
+	            fileToLoadDataMd5 = md5;
+	            
 			    long bytesPerAllocationUnit = (long)bootBlock16.getBPB_BytsPerSec() * (long)bootBlock16.getBPB_SecPerClus();
-			    modelLoadedData.addRow(new Object[]{fileToLoadData.getAbsolutePath(), OutputFormater.formatOutput(fileToLoadData.length()), (long)Math.ceil((double)fileToLoadData.length() / (double)bytesPerAllocationUnit)});
+			    modelLoadedData.addRow(new Object[]{fileToLoadData.getAbsolutePath(), OutputFormater.formatOutput(fileToLoadData.length()), (long)Math.ceil((double)fileToLoadData.length() / (double)bytesPerAllocationUnit), md5});
 			    
 			    fileToLoadDataLength = fileToLoadData.length();
 			    updateLabelSelectedSlackSize();
@@ -519,7 +540,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				FileInputStream fileInputStream = new FileInputStream(fileToLoadData);
 				
 				//Text log output
-				textAreaString += "Input file:" + fileToLoadData.getName() + "/" + fileToLoadData.length() + "\n";
+				textAreaString += "Input file:" + fileToLoadData.getName() + "/" + fileToLoadData.length() + "/" + fileToLoadDataMd5 + "\n";
 				textAreaString += "Hidden in:\n";
 				textAreaWithScroll.setText(textAreaString);
 				
@@ -564,7 +585,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 					bytesRemaining -= numberOfBytesToRead;
 					
 					//Text log output
-					textAreaString += numberOfBytesToRead + "/" + fat16Entry.getFileSlackSizeInBytes() + "/" + fat16Entry.getDirectoryPath() + fat16Entry.getLongFileName() + "\n";
+					textAreaString += numberOfBytesToRead + "/" + fat16Entry.getFileSlackSizeInBytes() + fat16Entry.getDirectoryPath() + fat16Entry.getLongFileName() + "\n";
 					textAreaWithScroll.setText(textAreaString);
 					
 					if (bytesRemaining == 0)
@@ -580,6 +601,217 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				System.out.println(exc);
 			}
 		}
+		else if (e.getSource() == buttonReadFromFileSlack)
+		{
+			//Clear text log output
+			textAreaString = textAreaWithScroll.getText();
+			
+			//Is textArea empty?
+			if (textAreaString == null || textAreaString.length() <= 0)
+			{
+				errorBox("No description of hidden files!", "No description");
+				return;
+			}
+			
+			//PARSE log
+			StringTokenizer rows = new StringTokenizer(textAreaString, "\n");
+			
+			//Log should include at least three rows
+			if (rows.countTokens() < 3)
+			{errorBox("Parse error!", "Parse error");return;}
+			
+			File outputFile = null;
+			FileOutputStream fileOutputStream = null;
+			
+			int rowNum = 0;
+			String originalFileName = null;
+			String originalFileHash = null;
+			long originalFileSize = -1;
+			while (rows.hasMoreTokens())
+			{
+				String row = rows.nextToken();
+				
+				//Get input file
+				if (rowNum == 0)
+				{
+					StringTokenizer firstRow = new StringTokenizer(row, ":");
+					
+					//First row has two parts separated with :
+					if (firstRow.countTokens() != 2)
+					{errorBox("Parse error!", "Parse error");return;}
+					
+					System.out.println("countTokens(): " + firstRow.countTokens());
+					
+					firstRow.nextToken(); //Ignore info text
+					String temp = firstRow.nextToken(); //Original file name, it's size in bytes and it's hash
+					
+					StringTokenizer originalFileTokenizer = new StringTokenizer(temp,"/");
+					
+					//FileName, file size in bytes and file hash are separated with /
+					if (originalFileTokenizer.countTokens() != 3)
+					{errorBox("Parse error!", "Parse error");return;}
+					
+					originalFileName = originalFileTokenizer.nextToken();
+					
+					try {
+						outputFile = new File(originalFileName);
+						fileOutputStream = new FileOutputStream(outputFile);
+						
+						originalFileSize = Long.parseLong(originalFileTokenizer.nextToken());
+						
+						if (originalFileSize <= 0)
+						{errorBox("Parse error!", "Parse error");return;}
+						
+						originalFileHash = originalFileTokenizer.nextToken();
+						
+						System.out.println("originalFileHash: " + originalFileHash);
+					}
+					catch (FileNotFoundException fileNotFoundException)
+					{
+						errorBox("Parse error (FileNotFoundException)!", "Parse error");return;
+					}
+					catch (NumberFormatException numberFormatException)	
+					{
+						errorBox("Parse error (NumberFormatException)!", "Parse error");return;
+					}
+					
+					//originalFileName = firstRow.nextToken();
+					
+					System.out.println("originalFileName: " + originalFileName);
+					System.out.println("originalFileSize: " + originalFileSize);
+				}
+				else if (rowNum == 1)
+					; //Ignore info text
+				else
+				{
+					StringTokenizer rowTokenizer = new StringTokenizer(row, "/");
+					
+					//Row should consist of at least 3 tokens
+					if (rowTokenizer.countTokens() < 3)
+					{errorBox("Parse error!", "Parse error");return;}
+					
+					try {
+						int numberOfTokens = rowTokenizer.countTokens();
+						
+						long slackSpaceUsedInBytes = Long.parseLong(rowTokenizer.nextToken());
+						long slackSpaceTotalInBytes = Long.parseLong(rowTokenizer.nextToken());
+						
+						System.out.println("slackSpaceUsedInBytes: " + slackSpaceUsedInBytes);
+						System.out.println("slackSpaceTotalInBytes: " + slackSpaceTotalInBytes);
+						
+						if (slackSpaceUsedInBytes > slackSpaceTotalInBytes)
+						{errorBox("Parse error!", "Parse error");return;}
+						
+						String filePath = "";
+						//-3 as we called nextToken() twice and want to ignore the filename
+						for (int i = 0; i < numberOfTokens - 3; i++)
+						{
+							filePath += "/" + rowTokenizer.nextToken();
+						}
+						filePath += "/";
+						
+						String fileName = rowTokenizer.nextToken();
+						
+						System.out.println("filePath: " + filePath);
+						System.out.println("fileName: " + fileName);
+						
+						//MOVE TO FILE PATH
+						//String pwd = fileSystemFAT16.getCurrentDirectoryPath();
+						//System.out.println("pwd: " + pwd);
+						
+						try {
+							if (!fileSystemFAT16.cd(filePath))
+							{errorBox("Cannot open path: " + filePath, "Parse error");return;}
+						}
+						catch (IOException exp)
+						{
+							errorBox("Parse error (IOException)!", "Parse error");return;
+						}
+						catch (NotEnoughBytesReadException exp)
+						{
+							errorBox("Parse error (NotEnoughBytesReadException)!", "Parse error");return;
+						}
+						
+						//pwd = fileSystemFAT16.getCurrentDirectoryPath();
+						//System.out.println("pwd: " + pwd);
+						
+						//Get content of current folder
+						ArrayList<FatEntry> dirContent = fileSystemFAT16.ls();
+						
+						//Go trough all entries in current directory
+						//We are searching for file with name equal to var. fileName
+						Fat16Entry fileEntry = null;
+						for (int i = 0; i < dirContent.size(); i++)
+						{
+							Fat16Entry fat16Entry = (Fat16Entry)dirContent.get(i);
+							
+							//If entry is the file we seek => store reference and break from loop
+							if (!fat16Entry.isSubdirectoryEntry() && fat16Entry.getLongFileName().compareToIgnoreCase(fileName) == 0)
+							{
+								fileEntry = fat16Entry;
+								break;
+							}
+						}
+						
+						//File found
+						if (fileEntry != null)
+						{
+							DataTransfer dataTransfer = fileEntry.readFromFileSlack();
+							byte[] payload = dataTransfer.getPayload();
+							
+							
+							fileOutputStream.write(payload, 0, (int)slackSpaceUsedInBytes);
+						}
+						else
+						{errorBox("File does not exist: " + filePath + fileName, "Parse error");return;}
+					}
+					catch (NumberFormatException numberFormatException)	
+					{
+						errorBox("Parse error (NumberFormatException)!", "Parse error");return;
+					}
+					catch (NotEnoughBytesReadException notEnoughBytesReadException)
+					{
+						errorBox("Parse error (NotEnoughBytesReadException)!", "Parse error");return;
+					}
+					catch (IOException ioException)
+					{
+						errorBox("Parse error (IOException)!", "Parse error");return;
+					}
+					
+					System.out.println("rowTokenizer.countTokens(): " + rowTokenizer.countTokens());
+				}
+				
+				System.out.println(row);
+				
+				rowNum++;
+			}
+			
+			try {
+				fileOutputStream.close();
+				
+				//Calculate hash of newly created file
+				String outputFileHash = Hash.getMd5FromFile(outputFile);
+				
+				System.out.println("outputFileHash: " + outputFileHash);
+				System.out.println("originalFileHash: " + originalFileHash);
+				
+				//Hash of restored file IS EQUAL to hash of original file
+				if (outputFileHash.compareToIgnoreCase(originalFileHash) == 0)
+				{
+					//success
+					infoBox("Success! Restored file hash == original file hash.\nFile: " + outputFile.getAbsolutePath() + " was created.", "Success");
+				}
+				else
+				{
+					errorBox("Restored file hash != original file hash", "Parse error");return;
+				}
+				
+			}
+			catch (IOException ioException)
+			{
+				errorBox("Parse error (IOException)!", "Parse error");return;
+			}
+		}
     }
 	
 	public void updateLabelSelectedSlackSize()
@@ -592,9 +824,9 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         JOptionPane.showMessageDialog(null, content, title, JOptionPane.ERROR_MESSAGE);
     }
 	
-	public static void infoBox(String infoMessage, String location)
+	public static void infoBox(String content, String title)
     {
-        JOptionPane.showMessageDialog(null, infoMessage, "InfoBox: " + location, JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null, content, title, JOptionPane.INFORMATION_MESSAGE);
     }
 	
 	@Override

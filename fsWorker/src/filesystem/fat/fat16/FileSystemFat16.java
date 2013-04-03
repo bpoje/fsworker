@@ -184,6 +184,90 @@ public class FileSystemFat16 extends FileSystemFat{
 		*/
 		return true;
 	}
+	
+	//Uses VFAT long file names
+	//Returns true if successful
+	//Old Windows filesystems (VFAT, FAT32) are not case-sensitive (there cannot be a readme.txt
+	//and a Readme.txt in the same folder) but are case-preserving, i.e. remembering the case of
+	//the letters.
+	private void cdRoot() throws IOException, NotEnoughBytesReadException
+	{
+		System.out.println("this.currentDirectoryPath: " + this.currentDirectoryPath);
+		
+		if (this.currentDirectoryPath.compareToIgnoreCase("/") == 0)
+			return;
+		
+		
+		//Do until we reach root directory /
+		while (this.currentDirectoryPath.compareToIgnoreCase("/") != 0)
+		{
+			ArrayList<FatEntry> dirContent = this.ls();
+			
+			//Go trough all entries in current directory
+			for (int i = 0; i < dirContent.size(); i++)
+			{
+				Fat16Entry fat16Entry = (Fat16Entry)dirContent.get(i);
+				
+				//If entry is .. => open it
+				if (fat16Entry.isSubdirectoryEntry() && fat16Entry.getLongFileName().compareToIgnoreCase("..") == 0)
+					this.cd(fat16Entry);
+			}
+		}
+		
+		return;
+	}
+	
+	//Uses VFAT long file names
+	//Returns true if successful
+	//If unsuccessful the current path remains unchanged
+	//Old Windows filesystems (VFAT, FAT32) are not case-sensitive (there cannot be a readme.txt
+	//and a Readme.txt in the same folder) but are case-preserving, i.e. remembering the case of
+	//the letters.
+	public boolean cd(String newDirectoryPath) throws IOException, NotEnoughBytesReadException
+	{
+		if (newDirectoryPath == null || newDirectoryPath.length() < 1 || newDirectoryPath.charAt(0) != '/')
+			return false;
+		
+		StringTokenizer st = new StringTokenizer(newDirectoryPath, "/");
+		
+		//Open root directory /
+		cdRoot();
+		
+		int numberOfTokens = st.countTokens();
+		
+		//Go trough all foldernames in newDirectoryPath
+		for (int i = 0; i < numberOfTokens; i++)
+		{
+			String folderName = st.nextToken();
+			
+			System.out.println("folderName: " + folderName);
+			
+			//Get content of current folder
+			ArrayList<FatEntry> dirContent = this.ls();
+			
+			//Go trough all entries in current directory
+			//We are searching for folder with name equal to var. folderName
+			Fat16Entry folderEntry = null;
+			for (int j = 0; j < dirContent.size(); j++)
+			{
+				Fat16Entry fat16Entry = (Fat16Entry)dirContent.get(j);
+				
+				//If entry is the directory we seek => store reference and break from loop
+				if (fat16Entry.isSubdirectoryEntry() && fat16Entry.getLongFileName().compareToIgnoreCase(folderName) == 0)
+				{
+					folderEntry = fat16Entry;
+					break;
+				}
+			}
+			
+			if (folderEntry != null)
+				this.cd(folderEntry);	//Folder was found => open it
+			else
+				return false;	//Folder was not found => return failure
+		}
+		
+		return true;
+	}
 
 	@Override
 	public void writeToSlack(FileSystemEntry entry, byte [] buffer) throws IOException, NotEnoughBytesReadException {
@@ -407,6 +491,11 @@ public class FileSystemFat16 extends FileSystemFat{
 	}
 
 	public String getCurrentDirectoryPath() {
+		return currentDirectoryPath;
+	}
+	
+	public String pwd()
+	{
 		return currentDirectoryPath;
 	}
 }
