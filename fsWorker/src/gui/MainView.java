@@ -87,7 +87,9 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private Container dataContainer = new Container();
 	private DataTableComponent dataTableComponent;
 	
-	private JXTreeTable binTree;
+	private JXTreeTable binTree = null;
+	private JScrollPane binTreeScrollPane = null;
+	private JPanel binTreePanel = new JPanel(new GridLayout(1, 1));
 	
 	//Menu
 	private JMenuBar menuBar;
@@ -110,7 +112,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private JButton buttonWriteToFileSlack = new JButton("Write to file slack");
 	private JLabel labelSelectedSlackSize = new JLabel("Selected file slack size in bytes: 0 B / 0 B");
 	private JButton buttonReadFromFileSlack = new JButton("Read from file slack");
-	private JButton buttonRefresh = new JButton("Refresh");
+	private JButton buttonRefresh = new JButton("Refresh file system");
 	
 	//Output
 	private String textAreaString = "";
@@ -194,34 +196,12 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		container = getContentPane();
 		container.setLayout(new GridLayout(7, 1));
 		
-		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData(null,"CF","","","","","","","","","","","","",true));
 		
-		//ArrayList<FatEntry> filesInFolder = fat16Directory.directory();
-		ArrayList<FatEntry> filesInFolder = fileSystemFAT16.ls();
 		
-		//Recursively
-		totalSlackFileSizeInBytes = 0;
-		scanFileSystem(filesInFolder, rootNode);
-		
-		//rootNode.add(incomeNode);
-		
-		binTree = new JXTreeTable(new MyTreeModel(rootNode));
-    	
-    	Highlighter highligher = HighlighterFactory.createSimpleStriping(HighlighterFactory.BEIGE);
-    	binTree.setHighlighters(highligher);
-        binTree.setShowGrid(false);
-        binTree.setShowsRootHandles(true);
-        configureCommonTableProperties(binTree);
-        binTree.setTreeCellRenderer(new TreeTableCellRenderer());
-        
-        //---------
-        binTree.addMouseListener(this);
-        
-        //--------
-        
-        
-        //this.getContentPane().add(new JScrollPane(binTree));
-        container.add(new JScrollPane(binTree));
+		//-------------------
+		refreshBinTree();
+		container.add(binTreePanel);
+        //-------------------
         
         //Bottom container with general informations
         infoContainer.setLayout(new GridLayout(10, 1));
@@ -828,6 +808,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			
 			try
 			{
+				refreshBinTree();
 				dataTableComponent.refresh();
 			}
 			catch (Exception exc)
@@ -836,6 +817,42 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			}
 		}
     }
+	
+	private void refreshBinTree() throws IOException, NotEnoughBytesReadException
+	{
+		//Move to root on filesystem
+		fileSystemFAT16.cd("/");
+		
+		//Remove treetable from jpanel
+		if (binTreeScrollPane != null)
+			binTreePanel.remove(binTreeScrollPane);
+		
+        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData(null,"CF","","","","","","","","","","","","",true));
+        
+        ArrayList<FatEntry> filesInFolder = fileSystemFAT16.ls();
+        
+        //Recursively
+      	totalSlackFileSizeInBytes = 0;
+      	scanFileSystem(filesInFolder, rootNode);
+      	
+        binTree = new JXTreeTable(new MyTreeModel(rootNode));
+        
+        Highlighter highligher = HighlighterFactory.createSimpleStriping(HighlighterFactory.BEIGE);
+    	binTree.setHighlighters(highligher);
+        binTree.setShowGrid(false);
+        binTree.setShowsRootHandles(true);
+        configureCommonTableProperties(binTree);
+        binTree.setTreeCellRenderer(new TreeTableCellRenderer());
+        binTree.addMouseListener(this);
+        
+        binTreeScrollPane = new JScrollPane(binTree);
+        
+        //Add newly created treetable to jpanel
+        binTreePanel.add(binTreeScrollPane);
+        
+        //Same as JFrame resize
+        this.validate();
+	}
 	
 	public void updateLabelSelectedSlackSize()
 	{
