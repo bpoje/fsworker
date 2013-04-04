@@ -85,6 +85,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private Container container;
 	private Container infoContainer = new Container();
 	private Container dataContainer = new Container();
+	private DataTableComponent dataTableComponent;
 	
 	private JXTreeTable binTree;
 	
@@ -109,6 +110,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private JButton buttonWriteToFileSlack = new JButton("Write to file slack");
 	private JLabel labelSelectedSlackSize = new JLabel("Selected file slack size in bytes: 0 B / 0 B");
 	private JButton buttonReadFromFileSlack = new JButton("Read from file slack");
+	private JButton buttonRefresh = new JButton("Refresh");
 	
 	//Output
 	private String textAreaString = "";
@@ -278,14 +280,17 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         buttonReadFromFileSlack.addActionListener(this);
         panelButtons.add(buttonReadFromFileSlack);
         
+        buttonRefresh.addActionListener(this);
+        panelButtons.add(buttonRefresh);
+        
         container.add(textAreaWithScroll.getScrollPane());
         //textAreaWithScroll.setEditable(false);
         
         container.add(panelButtons);
         
         //---------------------------------------------------------
-        DataTableComponent dataTableComponent = new DataTableComponent(dataContainer, fileSystemFAT16);
-        dataTableComponent.fillModel();
+        dataTableComponent = new DataTableComponent(dataContainer, fileSystemFAT16);
+        //dataTableComponent.fillModel();
         
         container.add(dataContainer);
         //---------------------------------------------------------
@@ -815,6 +820,19 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			catch (IOException ioException)
 			{
 				errorBox("Parse error (IOException)!", "Parse error");return;
+			}
+		}
+		else if (e.getSource() == buttonRefresh)
+		{
+			System.out.println("buttonRefresh");
+			
+			try
+			{
+				dataTableComponent.refresh();
+			}
+			catch (Exception exc)
+			{
+				System.out.println(exc);
 			}
 		}
     }

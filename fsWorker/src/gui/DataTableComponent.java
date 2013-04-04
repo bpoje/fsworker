@@ -36,7 +36,7 @@ public class DataTableComponent extends MouseAdapter {
 	private DefaultTableModel modelData = new DefaultTableModel();
 	//private long numberOfDataClusters;
 	
-	public DataTableComponent(Container container, FileSystemFat16 fileSystemFAT16)
+	public DataTableComponent(Container container, FileSystemFat16 fileSystemFAT16) throws IOException, NotEnoughBytesReadException
 	{
 		this.container = container;
 		this.fileSystemFAT16 = fileSystemFAT16;
@@ -47,10 +47,6 @@ public class DataTableComponent extends MouseAdapter {
 		model.addColumn("Pointing to FAT entry number");
 		model.addColumn("Data cluster number");
 		model.addColumn("Data cluster address");
-	  	//model.addRow(new Object[]{"Salary1","250001","50001","3000001"});
-	  	//model.addRow(new Object[]{"Salary1","250001","50001","3000001"});
-	  	//model.addRow(new Object[]{"Salary1","250001","50001","3000001"});
-	  	//model.addRow(new Object[]{"Salary1","250001","50001","3000001"});
 	  	
 		modelData.addColumn("Address");
 		for (int i = 0; i < 16; i++)
@@ -76,56 +72,26 @@ public class DataTableComponent extends MouseAdapter {
 	        };
 	    };
 	    
-	    /*
-	    table.getSelectionModel().addListSelectionListener(
-	            new ListSelectionListener() {
-	                public void valueChanged(ListSelectionEvent event) {
-	                    int viewRow = table.getSelectedRow();
-	                    int viewColumn = table.getSelectedColumn();
-	                    if (viewRow < 0 || viewColumn < 0) {
-	                        //Selection got filtered away.
-	                        label2.setText("");
-	                    } else {
-	                        int modelRow = 
-	                            table.convertRowIndexToModel(viewRow);
-	                        int modelColumn = 
-	                        		table.convertColumnIndexToModel(viewColumn);
-	                        label2.setText(
-	                            String.format("Selected Row in view: %d. " +
-	                                "Selected Row in model: %d." +
-	                            	"Selected Column in view: %d. " +
-	                                "Selected Column in model: %d.", 
-	                                viewRow, modelRow, viewColumn, modelColumn)
-	                                );
-	                    }
-	                }
-	            }
-	    );
-	    */
-	    
 	  	table.setCellEditor(new DefaultCellEditor(new JTextField()));
 	  	tableData.setCellEditor(new DefaultCellEditor(new JTextField()));
 	  	
-	  	//container.setLayout(new BorderLayout());
 	  	container.setLayout(new GridLayout(2, 1));
-	  	//container.add(label1, BorderLayout.NORTH);
-	  	//container.add(new JScrollPane(tableData), BorderLayout.SOUTH);
-	  	//container.add(new JScrollPane(table), BorderLayout.CENTER);
-	  	//container.add(label1);
 	  	container.add(new JScrollPane(table));
 	  	container.add(new JScrollPane(tableData));
+	  	
+	  	fillModel();
+	  	
+	  	//Select third row
+	  	table.setRowSelectionInterval(2, 2);
+	  	
+	  	//Select first column
+	  	table.setColumnSelectionInterval(0, 0);
+	  	
+	  	refreshSectorGUI();
 	}
 	
 	public void fillModel() throws IOException, NotEnoughBytesReadException
 	{
-		//Output FAT table & clusters markings
-		//for (int iClusterNumber = 0; iClusterNumber < fileSystemFAT16.getCountofClustersInDataRegion(); iClusterNumber++)
-		////-------for (int iClusterNumber = 0; iClusterNumber < fileSystemFAT16.getFATSizeInEntries(); iClusterNumber++)
-		//{
-		//	long fatEntryAddress = fileSystemFAT16.getFATPointerAddress((char)iClusterNumber);	
-		//	System.out.printf("clusterNumber: %d, fatEntryAddress: 0x%02Xh, isAvailable: %b, isClusterBad: %b\n", (int)iClusterNumber, fatEntryAddress, fileSystemFAT16.isClusterAvailable((char)iClusterNumber), fileSystemFAT16.isClusterBad((char)iClusterNumber));
-		//}
-		
 		System.out.println("fillModel()");
 		
 		long numberOfDataClusters = fileSystemFAT16.getCountofClustersInDataRegion();
@@ -205,20 +171,39 @@ public class DataTableComponent extends MouseAdapter {
 			
 			//System.out.printf("clusterNumber: %d, fatEntryAddress: 0x%02Xh, isAvailable: %b, isClusterBad: %b\n", (int)iClusterNumber, fatEntryAddress, fileSystemFAT16.isClusterAvailable((char)iClusterNumber), fileSystemFAT16.isClusterBad((char)iClusterNumber));
 		}
-		
-		//Select third row
-		table.setRowSelectionInterval(2, 2);
-		
-		//model.addRow(new Object[]{"Salary1","250001","50001","3000001"});
 	}
 	
-	@Override  
-    public void mouseClicked(MouseEvent event)  
-    {  
-        //System.out.println(e.getSource().getClass());
+	public void refresh() throws IOException, NotEnoughBytesReadException
+	{
+		//Get currently selected row
+		int selectedRow = table.getSelectedRow();
 		
+		//Get currently selected column
+		int selectedColumn = table.getSelectedColumn();
+		
+		//Empty table table
+        for( int i = model.getRowCount() - 1; i >= 0; i-- ) {
+        	model.removeRow(i);
+        }
+        
+        fillModel();
+        
+        //Select the row and column again
+        if (selectedRow < model.getRowCount() && selectedColumn < model.getColumnCount())
+        {
+        	table.setRowSelectionInterval(selectedRow, selectedRow);
+        	table.setColumnSelectionInterval(selectedColumn, selectedColumn);
+        }
+        
+        refreshSectorGUI();
+	}
+	
+	private void refreshSectorGUI()
+	{
 		int viewRow = table.getSelectedRow();
         int viewColumn = table.getSelectedColumn();
+        System.out.println("viewRow: " + viewRow);
+        System.out.println("viewColumn: " + viewColumn);
         if (viewRow < 0 || viewColumn < 0) {
             //Selection got filtered away.
             //label2.setText("");
@@ -288,5 +273,11 @@ public class DataTableComponent extends MouseAdapter {
             	modelData.addRow(object);
             }
         }
+	}
+	
+	@Override  
+    public void mouseClicked(MouseEvent event)  
+    {  
+		refreshSectorGUI();
     } 
 }
