@@ -281,7 +281,7 @@ public class DataTableComponent extends MouseAdapter {
             	 for (int j = 0; j < 16; j++)
             	 {
             		 byte byteValue = data[i * 16 + j];
-            		 System.out.print((char)byteValue + " ");
+            		 //System.out.print((char)byteValue + " ");
             		 object[j + 1] = OutputFormater.byteToHexString(byteValue);
             	 }
             	 
