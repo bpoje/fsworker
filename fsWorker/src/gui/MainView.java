@@ -192,7 +192,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		container = getContentPane();
 		container.setLayout(new GridLayout(7, 1));
 		
-		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData(null,"CF","","","","","","","","","","",true));
+		DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new TableRowData(null,"CF","","","","","","","","","","","","",true));
 		
 		//ArrayList<FatEntry> filesInFolder = fat16Directory.directory();
 		ArrayList<FatEntry> filesInFolder = fileSystemFAT16.ls();
@@ -319,15 +319,18 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			String sFileSlackSizeInBytes = OutputFormater.formatOutput(fileSlackSizeInBytes);
 			String directoryPath = file.getDirectoryPath();
 			
+			String time = file.getTimeCreatedOrLastUpdated();
+			String date = file.getDateCreatedOrLastUpdated();
+			
 			//If file
 			if (!file.isSubdirectoryEntry())
 			{
-				treeNode.add(new DefaultMutableTreeNode(new TableRowData(file, filename,filenameExtension,longFilename,directoryPath,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,false)));
+				treeNode.add(new DefaultMutableTreeNode(new TableRowData(file, filename,filenameExtension,longFilename,directoryPath,time,date,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,false)));
 			}
 			//If directory
 			else
 			{
-				DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(file, filename,filenameExtension,longFilename,directoryPath,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,true));
+				DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(new TableRowData(file, filename,filenameExtension,longFilename,directoryPath,time,date,sStartingClusterNumber,sFilesizeInBytes,sTotalClustersNeededForData,sTotalAllocatedSizeInBytes,sFileSlackSizeInBytes,md5OfData,md5OfFileSlack,true));
 						
 				//Ignore . and .. in search
 				if (filename.compareToIgnoreCase(".") != 0 && filename.compareToIgnoreCase("..") != 0)

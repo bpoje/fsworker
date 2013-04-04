@@ -9,6 +9,8 @@ public class MyTreeModel extends AbstractTreeTableModel {
 	private String[] titles = { "File", "Short Filename", "Extension",
 			"Long Filename (VFAT)",
 			"Directory Path",
+			"Time created or last updated",
+			"Date created or last updated",
 			"Starting Cluster Number", "File size in Bytes",
 			"Total clusters needed for data", "Total allocated size in Bytes",
 			"File slack size in Bytes", "Md5 of data", "Md5 of file slack"};
@@ -51,18 +53,22 @@ public class MyTreeModel extends AbstractTreeTableModel {
 				case 4:
 					return data.getDirectoryPath();
 				case 5:
-					return data.getStartingClusterNumber();
+					return data.getTime();
 				case 6:
-					return data.getFilesizeInBytes();
+					return data.getDate();
 				case 7:
-					return data.getTotalClustersNeededForData();
+					return data.getStartingClusterNumber();
 				case 8:
-					return data.getTotalAllocatedSizeInBytes();
+					return data.getFilesizeInBytes();
 				case 9:
-					return data.getFileSlackSizeInBytes();
+					return data.getTotalClustersNeededForData();
 				case 10:
-					return data.getMd5OfData();
+					return data.getTotalAllocatedSizeInBytes();
 				case 11:
+					return data.getFileSlackSizeInBytes();
+				case 12:
+					return data.getMd5OfData();
+				case 13:
 					return data.getMd5OfFileSlack();
 				}
 			}
@@ -85,18 +91,22 @@ public class MyTreeModel extends AbstractTreeTableModel {
 				case 4:
 					return data.getDirectoryPath();
 				case 5:
-					return data.getStartingClusterNumber();
+					return data.getTime();
 				case 6:
-					return data.getFilesizeInBytes();
+					return data.getDate();
 				case 7:
-					return data.getTotalClustersNeededForData();
+					return data.getStartingClusterNumber();
 				case 8:
-					return data.getTotalAllocatedSizeInBytes();
+					return data.getFilesizeInBytes();
 				case 9:
-					return data.getFileSlackSizeInBytes();
+					return data.getTotalClustersNeededForData();
 				case 10:
-					return data.getMd5OfData();
+					return data.getTotalAllocatedSizeInBytes();
 				case 11:
+					return data.getFileSlackSizeInBytes();
+				case 12:
+					return data.getMd5OfData();
+				case 13:
 					return data.getMd5OfFileSlack();
 				}
 			}

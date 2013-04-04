@@ -21,6 +21,9 @@ public class FatEntry extends FileSystemEntry {
 	protected boolean isArchiveFlag;
 	protected boolean isLongFilenameEntry;
 	
+	String timeCreatedOrLastUpdated;
+	String dateCreatedOrLastUpdated;
+	
 	protected FileSystemIO fileSystemIO;
 
 	// Check first byte of filename
@@ -49,6 +52,8 @@ public class FatEntry extends FileSystemEntry {
 		this.directoryPath = directoryPath;
 		
 		decodeAttributes();
+		decodeTimeCreatedOrLastUpdated();
+		decodeDateCreatedOrLastUpdated();
 		decodeFilenameStatus();
 	}
 
@@ -171,6 +176,47 @@ public class FatEntry extends FileSystemEntry {
 		 * System.out.println();
 		 */
 	}
+	
+	public void decodeTimeCreatedOrLastUpdated() throws IOException, NotEnoughBytesReadException
+	{
+		byte buffer[] = fileSystemIO.readFSImage(entryAddress + 22, 2);
+		
+		byte low = buffer[0];
+		byte high = buffer[1];
+		
+		//System.out.printf("Address: 0x%02X\n", entryAddress + 22);
+		//System.out.printf("0x%02X\n", low);
+		//System.out.printf("0x%02X\n", high);
+		
+		byte numOfTwoSecondPeriods = (byte) (low & (byte)0x1F);
+		byte numOfSeconds = (byte) (numOfTwoSecondPeriods * 2);
+		
+		byte numOfMinutes = (byte)(low & ((byte)0x07 << 5));
+		numOfMinutes = (byte)((numOfMinutes >>> 5) & 0x07);
+		numOfMinutes = (byte)(numOfMinutes | ((high & 0x07) << 3));
+		
+		byte numOfHours = (byte)((high & ((byte)0x1F << 3)) >>> 3);
+		
+		timeCreatedOrLastUpdated = String.format("%02d:%02d:%02d",numOfHours, numOfMinutes, numOfSeconds);
+	}
+	
+	public void decodeDateCreatedOrLastUpdated() throws IOException, NotEnoughBytesReadException
+	{
+		byte buffer[] = fileSystemIO.readFSImage(entryAddress + 24, 2);
+		
+		byte low = buffer[0];
+		byte high = buffer[1];
+		
+		byte dayNumber = (byte) (low & 0x1F);
+		
+		byte monthNumber = (byte) ((low >>> 5) & 0x07);
+		monthNumber = (byte) (((high & 0x01) << 3) | monthNumber);
+		
+		byte yearNumber = (byte) (high >>> 1);
+		int year = 1980 + yearNumber;
+		
+		dateCreatedOrLastUpdated = String.format("%02d.%02d.%04d",dayNumber, monthNumber, year);
+	}
 
 	public char getEntryNumber() {
 		return entryNumber;
@@ -222,5 +268,13 @@ public class FatEntry extends FileSystemEntry {
 
 	public String getDirectoryPath() {
 		return directoryPath;
+	}
+	
+	public String getTimeCreatedOrLastUpdated() {
+		return timeCreatedOrLastUpdated;
+	}
+
+	public String getDateCreatedOrLastUpdated() {
+		return dateCreatedOrLastUpdated;
 	}
 }

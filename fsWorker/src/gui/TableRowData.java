@@ -8,6 +8,8 @@ public class TableRowData {
 	private String filenameExtension;
 	private String longFilename;
 	private String directoryPath;
+	private String time;
+	private String date;
 	private String startingClusterNumber;
 	private String filesizeInBytes;
 	private String totalClustersNeededForData;
@@ -22,6 +24,8 @@ public class TableRowData {
 			String filenameExtension,
 			String longFilename,
 			String directoryPath,
+			String time,
+			String date,
 			String startingClusterNumber, String filesizeInBytes,
 			String totalClustersNeededForData,
 			String totalAllocatedSizeInBytes, String fileSlackSizeInBytes,
@@ -31,6 +35,8 @@ public class TableRowData {
 		this.filenameExtension = filenameExtension;
 		this.longFilename = longFilename;
 		this.directoryPath = directoryPath;
+		this.time = time;
+		this.date = date;
 		this.startingClusterNumber = startingClusterNumber;
 		this.filesizeInBytes = filesizeInBytes;
 		this.totalClustersNeededForData = totalClustersNeededForData;
@@ -139,5 +145,17 @@ public class TableRowData {
 	}
 	public void setDirectoryPath(String directoryPath) {
 		this.directoryPath = directoryPath;
+	}
+	public String getTime() {
+		return time;
+	}
+	public void setTime(String time) {
+		this.time = time;
+	}
+	public String getDate() {
+		return date;
+	}
+	public void setDate(String date) {
+		this.date = date;
 	}
 }
