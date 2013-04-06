@@ -110,7 +110,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private JButton buttonAdd = new JButton("Add");
 	private JButton buttonClear = new JButton("Clear");
 	private JButton buttonWriteToFileSlack = new JButton("Write to file slack");
-	private JLabel labelSelectedSlackSize = new JLabel("Selected file slack size in bytes: 0 B / 0 B");
+	private JLabel labelSelectedSlackSize = new JLabel();
 	private JButton buttonReadFromFileSlack = new JButton("Read from file slack");
 	private JButton buttonRefresh = new JButton("Refresh file system");
 	
@@ -245,7 +245,9 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         //Data loading
         container.add(new JScrollPane(tableLoadedData));
         
-      //---------------------------------------------------------
+        //---------------------------------------------------------
+        //JPanel
+        
         buttonAdd.addActionListener(this);
         panelButtons.add(buttonAdd);
         
@@ -255,13 +257,15 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         buttonWriteToFileSlack.addActionListener(this);
         panelButtons.add(buttonWriteToFileSlack);
         
-        panelButtons.add(labelSelectedSlackSize);
-        
         buttonReadFromFileSlack.addActionListener(this);
         panelButtons.add(buttonReadFromFileSlack);
         
         buttonRefresh.addActionListener(this);
         panelButtons.add(buttonRefresh);
+        
+        updateLabelSelectedSlackSize();
+        panelButtons.add(labelSelectedSlackSize);
+        //---------------------------------------------------------
         
         container.add(textAreaWithScroll.getScrollPane());
         //textAreaWithScroll.setEditable(false);
@@ -503,7 +507,6 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		        		
 		        		//Update label
 		        		selectedSlackFileSizeInBytes += file.getFileSlackSizeInBytes();
-		        		//labelSelectedSlackSize.setText("Selected file slack size in bytes: " + OutputFormater.formatOutput(selectedSlackFileSizeInBytes));
 		        		updateLabelSelectedSlackSize();
 	        		}
         		}
@@ -527,7 +530,6 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	{
 		//Update label
 		selectedSlackFileSizeInBytes = 0;
-		//labelSelectedSlackSize.setText("Selected file slack size in bytes: " + OutputFormater.formatOutput(selectedSlackFileSizeInBytes));
 		updateLabelSelectedSlackSize();
 		
 		//Empty tableSelectedFiles table
@@ -890,7 +892,8 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	
 	public void updateLabelSelectedSlackSize()
 	{
-		labelSelectedSlackSize.setText("Selected file slack size in bytes: " + OutputFormater.formatOutput(selectedSlackFileSizeInBytes) + " / " + OutputFormater.formatOutput(fileToLoadDataLength));
+		//labelSelectedSlackSize.setText("Selected file slack size in bytes: " + OutputFormater.formatOutput(selectedSlackFileSizeInBytes) + " / " + OutputFormater.formatOutput(fileToLoadDataLength));
+		labelSelectedSlackSize.setText("Loaded data size in bytes: " + OutputFormater.formatOutput(fileToLoadDataLength) + " / " + "Selected file slack size in bytes: " + OutputFormater.formatOutput(selectedSlackFileSizeInBytes));
 	}
 	
 	public static void errorBox(String content, String title)
