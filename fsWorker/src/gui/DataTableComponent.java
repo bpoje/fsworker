@@ -18,10 +18,12 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import filesystem.exception.NotEnoughBytesReadException;
 import filesystem.fat.fat16.FileSystemFat16;
+import filesystem.io.DataConverter;
 import filesystem.utils.OutputFormater;
 
 public class DataTableComponent extends MouseAdapter {
@@ -52,6 +54,10 @@ public class DataTableComponent extends MouseAdapter {
 		for (int i = 0; i < 16; i++)
 			modelData.addColumn(i);
 		
+		//Column for ASCII display
+		for (int i = 0; i < 16; i++)
+			modelData.addColumn("");
+		
 	  	table = new JTable(model){
 	        private static final long serialVersionUID = 1L;
 	        
@@ -74,6 +80,19 @@ public class DataTableComponent extends MouseAdapter {
 	    
 	  	table.setCellEditor(new DefaultCellEditor(new JTextField()));
 	  	tableData.setCellEditor(new DefaultCellEditor(new JTextField()));
+	  	
+	  	 //Column for ASCII display
+	  	DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+	  	centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+	  	for (int i = 1; i < 1 + 16 + 16; i++)
+	  		tableData.getColumnModel().getColumn(i).setCellRenderer( centerRenderer );
+	  	
+	  	
+	  	//tableData.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+	  	//tableData.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+	  	//TableColumnAdjuster tca = new TableColumnAdjuster(table);
+	  	//tca.adjustColumns();
+	  	//setColumnWidth(5);
 	  	
 	  	container.setLayout(new GridLayout(2, 1));
 	  	container.add(new JScrollPane(table));
@@ -260,20 +279,60 @@ public class DataTableComponent extends MouseAdapter {
             for (int i = 0; i < bytesPerCluster / 16; i++)
             {
             	 String sDataClusterAddress = OutputFormater.longToHexString(dataClusterAddress + (long)16 * i);
-            	 Object[] object = new Object[17];
+            	 Object[] object = new Object[1 + 16 + 16];
             	 object[0] = sDataClusterAddress;
+            	 
+            	 //For ASCII display
+            	 //StringBuilder stringBuilder = new StringBuilder("|");
             	 
             	 for (int j = 0; j < 16; j++)
             	 {
             		 byte byteValue = data[i * 16 + j];
             		 //System.out.print((char)byteValue + " ");
             		 object[j + 1] = OutputFormater.byteToHexString(byteValue);
+            		 
+            		//For ASCII display
+            		int value = (int)DataConverter.getValueFrom1Byte(byteValue);
+            		
+            		//if (value >= 32 && value < 127)
+            		//	stringBuilder.append((char)value);
+            		//else
+            		//	stringBuilder.append(".");
+            		
+            		int index = j + 1 + 16;
+            		if (value >= 32 && value < 127)
+            			object[index] = (char)value;
+            		else
+            			object[index] = ".";
+            			//object[index] = "abcdefghijk";
+            		
             	 }
+            	 
+            	//For ASCII display
+            	//stringBuilder.append("|");
+            	//object[17] = stringBuilder.toString();
             	 
             	modelData.addRow(object);
             }
         }
 	}
+	
+	//public void setColumnWidth(int preferredWidth)
+	//{
+	//	tableData.prepareRenderer(renderer, row, column)
+		
+		/*
+		System.out.println("setColumnWidth");
+		
+		for (int i = 0; i < 16; i++)
+		{
+			int cWidth = tableData.getColumnModel().getColumn(1 + 16 + i).getPreferredWidth();
+			System.out.print(cWidth + " ");
+	  		tableData.getColumnModel().getColumn(1 + 16 + i).setPreferredWidth(preferredWidth);
+		}
+		System.out.println();
+		*/
+	//}
 	
 	@Override  
     public void mouseClicked(MouseEvent event)  
