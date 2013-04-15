@@ -7,6 +7,8 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -21,6 +23,7 @@ import java.util.StringTokenizer;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -64,7 +67,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class MainView extends JFrame implements ActionListener, MouseListener {
+public class MainView extends JFrame implements ActionListener, MouseListener, ItemListener {
 	private FileSystemFat16 fileSystemFAT16;
 	
 	private BootBlock bootBlock;
@@ -84,6 +87,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	
 	private Container container;
 	
+	private JCheckBox dataCheckBox = new JCheckBox("Show structure", true);
 	private Container dataContainer = new Container();
 	private DataTableComponent dataTableComponent;
 	
@@ -140,7 +144,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		//Data loading
-		modelLoadedData.addColumn("Filename");
+		modelLoadedData.addColumn("Filename (Data to hide)");
 		modelLoadedData.addColumn("Size");
 		modelLoadedData.addColumn("Clusters required");
 		modelLoadedData.addColumn("Md5 of data file");
@@ -155,7 +159,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	    };
 	    
 	    //
-	    modelSelectedFiles.addColumn("File");
+	    modelSelectedFiles.addColumn("File (Hide in)");
 	    modelSelectedFiles.addColumn("Long Filename (VFAT)");
 	    modelSelectedFiles.addColumn("Directory Path");
 		modelSelectedFiles.addColumn("Starting Cluster Number");
@@ -191,7 +195,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         
         //---------------------------------------------------------
         //JPanel
-        panelButtons.setLayout(new GridLayout(3, 2));
+        //panelButtons.setLayout(new GridLayout(3, 2));
         buttonAdd.addActionListener(this);
         panelButtons.add(buttonAdd);
         
@@ -207,8 +211,12 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         buttonRefresh.addActionListener(this);
         panelButtons.add(buttonRefresh);
         
+        dataCheckBox.addItemListener(this);
+        panelButtons.add(dataCheckBox);
+        
         updateLabelSelectedSlackSize();
         panelButtons.add(labelSelectedSlackSize);
+        
         //---------------------------------------------------------
         
         //Data loading
@@ -930,6 +938,16 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	public void mouseReleased(MouseEvent arg0) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public void itemStateChanged(ItemEvent e)
+	{
+		Object source = e.getItemSelectable();
+		
+		if (source == dataCheckBox)
+		{
+			
+		}
 	}
 }
 
