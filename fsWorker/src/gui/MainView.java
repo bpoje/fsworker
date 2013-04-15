@@ -83,7 +83,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private long selectedSlackFileSizeInBytes = 0;
 	
 	private Container container;
-	private Container infoContainer = new Container();
+	
 	private Container dataContainer = new Container();
 	private DataTableComponent dataTableComponent;
 	
@@ -94,7 +94,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	//Menu
 	private JMenuBar menuBar;
 	private JMenu menu, submenu;
-	private JMenuItem menuItemExit, menuItemOpenData;
+	private JMenuItem menuItemExit, menuItemOpenData, menuItemInfo;
 	
 	//Data loading
 	File fileToLoadData = null;
@@ -173,28 +173,10 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	        };
 	    };
 	    
-		//Create the menu bar.
-		menuBar = new JMenuBar();
-		
-		//Build the first menu.
-		menu = new JMenu("File");
-		menu.setMnemonic(KeyEvent.VK_F);
-		menu.getAccessibleContext().setAccessibleDescription(
-		        "File menu");
-		menuBar.add(menu);
-		
-		menuItemOpenData = new JMenuItem("Load data file", KeyEvent.VK_I);
-		menuItemOpenData.addActionListener(this);
-		menu.add(menuItemOpenData);
-		
-		menuItemExit = new JMenuItem("Exit", KeyEvent.VK_X);
-		menuItemExit.addActionListener(this);
-		menu.add(menuItemExit);
-		
-		this.setJMenuBar(menuBar);
+	    createMenu();
 		
 		container = getContentPane();
-		container.setLayout(new GridLayout(7, 1));
+		container.setLayout(new GridLayout(3, 1));
 		
 		
 		
@@ -202,52 +184,14 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		refreshBinTree();
 		container.add(binTreePanel);
         //-------------------
+		
+        //container.add(new JScrollPane(tableSelectedFiles));
         
-        //Bottom container with general informations
-        infoContainer.setLayout(new GridLayout(10, 1));
-        JLabel label1 = new JLabel("Total file slack size in bytes: " + OutputFormater.formatOutput(totalSlackFileSizeInBytes));
-        infoContainer.add(label1);
         
-        JLabel label2 = new JLabel("FAT type: " + bootBlock16.getType());
-        infoContainer.add(label2);
-        
-        JLabel label3 = new JLabel("Bytes per sector: " + OutputFormater.formatOutput((long)bootBlock16.getBPB_BytsPerSec()));
-        infoContainer.add(label3);
-        
-        JLabel label4 = new JLabel("Number of sectors per allocation unit (cluster): " + (long)bootBlock16.getBPB_SecPerClus());
-        infoContainer.add(label4);
-        
-        //Cluster <=> AllocationUnit
-        long bytesPerAllocationUnit = (long)bootBlock16.getBPB_BytsPerSec() * (long)bootBlock16.getBPB_SecPerClus();
-        JLabel label5 = new JLabel("Number of Bytes per allocation unit (cluster): " + OutputFormater.formatOutput(bytesPerAllocationUnit));
-        infoContainer.add(label5);
-        
-        JLabel label6 = new JLabel("Number of reserved blocks: " + (long)bootBlock16.getBPB_RsvdSecCnt());
-        infoContainer.add(label6);
-        
-        JLabel label7 = new JLabel("Number of FAT data structures on the volume: " + (long)bootBlock16.getBPB_NumFATs());
-        infoContainer.add(label7);
-        
-        JLabel label8 = new JLabel("Number of sectors occupied by ONE FAT: " + (long)bootBlock16.getFATSz());
-        infoContainer.add(label8);
-        
-        JLabel label9 = new JLabel("Number of sectors in data region: " + (long)bootBlock16.getNumberOfDataSectors());
-        infoContainer.add(label9);
-        
-        JLabel label10 = new JLabel("Number of clusters in data region: " + (long)bootBlock16.getCountofClustersInDataRegion());
-        infoContainer.add(label10);
-        
-        container.add(infoContainer);
-        
-        //
-        container.add(new JScrollPane(tableSelectedFiles));
-        
-        //Data loading
-        container.add(new JScrollPane(tableLoadedData));
         
         //---------------------------------------------------------
         //JPanel
-        
+        panelButtons.setLayout(new GridLayout(3, 2));
         buttonAdd.addActionListener(this);
         panelButtons.add(buttonAdd);
         
@@ -267,17 +211,56 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         panelButtons.add(labelSelectedSlackSize);
         //---------------------------------------------------------
         
-        container.add(textAreaWithScroll.getScrollPane());
-        //textAreaWithScroll.setEditable(false);
+        //Data loading
+        //container.add(new JScrollPane(tableLoadedData));
         
-        container.add(panelButtons);
+        
+        //container.add(textAreaWithScroll.getScrollPane());
+        
+        
         
         //---------------------------------------------------------
         dataTableComponent = new DataTableComponent(dataContainer, fileSystemFAT16);
-        //dataTableComponent.fillModel();
+        
+        
+        //---------------------------------------------------------
+        
+        JPanel panelButtons1 = new JPanel(new GridLayout(4, 1));
+        panelButtons1.add(new JScrollPane(tableSelectedFiles));
+        panelButtons1.add(new JScrollPane(tableLoadedData));
+        panelButtons1.add(textAreaWithScroll.getScrollPane());
+        panelButtons1.add(panelButtons);
+        //container.add(panelButtons);
+        container.add(panelButtons1);
+        
         
         container.add(dataContainer);
-        //---------------------------------------------------------
+	}
+	
+	private void createMenu()
+	{
+		// Create the menu bar.
+		menuBar = new JMenuBar();
+
+		// Build the first menu.
+		menu = new JMenu("File");
+		menu.setMnemonic(KeyEvent.VK_F);
+		menu.getAccessibleContext().setAccessibleDescription("File menu");
+		menuBar.add(menu);
+
+		menuItemInfo = new JMenuItem("Show info", KeyEvent.VK_I);
+		menuItemInfo.addActionListener(this);
+		menu.add(menuItemInfo);
+
+		menuItemOpenData = new JMenuItem("Load data file", KeyEvent.VK_L);
+		menuItemOpenData.addActionListener(this);
+		menu.add(menuItemOpenData);
+
+		menuItemExit = new JMenuItem("Exit", KeyEvent.VK_X);
+		menuItemExit.addActionListener(this);
+		menu.add(menuItemExit);
+
+		this.setJMenuBar(menuBar);
 	}
 	
 	private void scanFileSystem(ArrayList<FatEntry> files, DefaultMutableTreeNode treeNode) throws IOException, NotEnoughBytesReadException
@@ -385,6 +368,10 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		{
 			actionMenuItemOpenData();
 		}
+		else if (e.getSource() == menuItemInfo)
+		{
+			actionMenuItemInfo();
+		}
 		else if (e.getSource() == buttonAdd)
 		{
 			actionButtonAdd();
@@ -449,6 +436,12 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		    fileToLoadDataLength = fileToLoadData.length();
 		    updateLabelSelectedSlackSize();
 		}
+	}
+	
+	private void actionMenuItemInfo()
+	{
+		InfoView infoView = new InfoView(bootBlock16, totalSlackFileSizeInBytes);
+		infoView.setVisible(true);
 	}
 	
 	private void actionButtonAdd()
