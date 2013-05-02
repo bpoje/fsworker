@@ -67,7 +67,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class MainView extends JFrame implements ActionListener, MouseListener, ItemListener {
+//public class MainView extends JFrame implements ActionListener, MouseListener, ItemListener {
+public class MainView extends JFrame implements ActionListener, MouseListener {
 	private FileSystemFat16 fileSystemFAT16;
 	
 	private BootBlock bootBlock;
@@ -87,7 +88,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener, I
 	
 	private Container container;
 	
-	private JCheckBox dataCheckBox = new JCheckBox("Show structure", true);
+	//private JCheckBox dataCheckBox = new JCheckBox("Show structure", true);
 	private Container dataContainer = new Container();
 	private DataTableComponent dataTableComponent;
 	
@@ -211,8 +212,8 @@ public class MainView extends JFrame implements ActionListener, MouseListener, I
         buttonRefresh.addActionListener(this);
         panelButtons.add(buttonRefresh);
         
-        dataCheckBox.addItemListener(this);
-        panelButtons.add(dataCheckBox);
+        //dataCheckBox.addItemListener(this);
+        //panelButtons.add(dataCheckBox);
         
         updateLabelSelectedSlackSize();
         panelButtons.add(labelSelectedSlackSize);
@@ -940,15 +941,15 @@ public class MainView extends JFrame implements ActionListener, MouseListener, I
 		
 	}
 	
-	public void itemStateChanged(ItemEvent e)
-	{
-		Object source = e.getItemSelectable();
+	//public void itemStateChanged(ItemEvent e)
+	//{
+	//	Object source = e.getItemSelectable();
 		
-		if (source == dataCheckBox)
-		{
-			
-		}
-	}
+		//if (source == dataCheckBox)
+		//{
+		//	
+		//}
+	//}
 }
 
 class JTextAreaWithScroll extends JTextArea
