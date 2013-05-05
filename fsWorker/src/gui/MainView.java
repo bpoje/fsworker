@@ -450,33 +450,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		}
 		else if (e.getSource() == buttonAddBadCluster)
 		{
-			System.out.println("You Selected : " +     
-	        	       comboBoxBadClusters.getSelectedItem());
-			
-			Object selected = comboBoxBadClusters.getSelectedItem();
-			if (selected == null)
-				return;
-			
-			String sSelected = (String)selected;
-			StringTokenizer stringTokenizer = new StringTokenizer(sSelected," ");
-			
-			//Example value of sSelected: "(0x0002) 2"
-			if (stringTokenizer.countTokens() != 2)
-				return;
-			
-			stringTokenizer.nextToken();
-			String sDataClusterNumber = stringTokenizer.nextToken();
-			
-			int dataClusterNumber = 2;
-			
-			try
-			{
-				dataClusterNumber = Integer.parseInt(sDataClusterNumber);
-			}
-			catch (NumberFormatException exc)
-			{return;}
-			
-			System.out.println("dataClusterNumber: " + dataClusterNumber);
+			actionButtonAddBadCluster();
 		}
     }
 	
@@ -558,8 +532,11 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         			boolean unique = true;
 	        		for (int j = 0; j < tableSelectedFiles.getRowCount(); j++)
 	        		{
-	        			//System.out.println(tableSelectedFiles.getValueAt(j, 0));
-	        			Fat16Entry alreadyIncludedFile = (Fat16Entry)tableSelectedFiles.getValueAt(j, 0);
+	        			//Fat16Entry alreadyIncludedFile = (Fat16Entry)tableSelectedFiles.getValueAt(j, 0);
+	        			FileOrSectorEntry fileOrSectorEntry = (FileOrSectorEntry) tableSelectedFiles.getValueAt(j, 0);
+	        			Fat16Entry alreadyIncludedFile = null;
+	        			if (fileOrSectorEntry.isFile())
+	        				alreadyIncludedFile = (Fat16Entry) fileOrSectorEntry.getEntry();
 	        			
 	        			if (alreadyIncludedFile == file)
 	        			{
@@ -571,7 +548,12 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	        		if (unique)
 	        		{
 		        		Object[] row = new Object[8];
-		        		row[0] = file;
+		        		
+		        		//row[0] = file;
+		        		Object entry = file;
+		        		boolean isFile = true;
+		        		FileOrSectorEntry fileOrSectorEntry = new FileOrSectorEntry(entry, isFile);
+		        		row[0] = fileOrSectorEntry;
 		        		row[1] = file.getLongFileName();
 		        		row[2] = file.getDirectoryPath();
 		        		row[3] = Long.toString((long)file.getStartingClusterNumber());
@@ -653,9 +635,13 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			long bytesRemaining = fileToLoadData.length();
 			for (int i = 0; i < modelSelectedFiles.getRowCount(); i++)
 			{
-				System.out.println(modelSelectedFiles.getValueAt(i, 0));
-				
-				Fat16Entry fat16Entry = (Fat16Entry)modelSelectedFiles.getValueAt(i, 0);
+				FileOrSectorEntry fileOrSectorEntry = (FileOrSectorEntry) modelSelectedFiles.getValueAt(i, 0);
+				//System.out.println(modelSelectedFiles.getValueAt(i, 0));
+				//Fat16Entry fat16Entry = (Fat16Entry)modelSelectedFiles.getValueAt(i, 0);
+				Fat16Entry fat16Entry = null;
+				if (fileOrSectorEntry.isFile())
+					fat16Entry = (Fat16Entry)fileOrSectorEntry.getEntry();
+				System.out.println("fat16Entry: " + fat16Entry);
 				
 				long fileSlackSizeInBytes = fat16Entry.getFileSlackSizeInBytes();
 				System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
@@ -1027,6 +1013,37 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		//	
 		//}
 	//}
+	
+	private void actionButtonAddBadCluster()
+	{
+		System.out.println("You Selected : " +     
+     	       comboBoxBadClusters.getSelectedItem());
+		
+		Object selected = comboBoxBadClusters.getSelectedItem();
+		if (selected == null)
+			return;
+		
+		String sSelected = (String)selected;
+		StringTokenizer stringTokenizer = new StringTokenizer(sSelected," ");
+		
+		//Example value of sSelected: "(0x0002) 2"
+		if (stringTokenizer.countTokens() != 2)
+			return;
+		
+		stringTokenizer.nextToken();
+		String sDataClusterNumber = stringTokenizer.nextToken();
+		
+		int dataClusterNumber = 2;
+		
+		try
+		{
+			dataClusterNumber = Integer.parseInt(sDataClusterNumber);
+		}
+		catch (NumberFormatException exc)
+		{return;}
+		
+		System.out.println("dataClusterNumber: " + dataClusterNumber);
+	}
 }
 
 class JTextAreaWithScroll extends JTextArea
@@ -1042,4 +1059,32 @@ class JTextAreaWithScroll extends JTextArea
     {
         return scrollPane;
     }
+}
+
+class FileOrSectorEntry
+{
+	private Object entry;
+	private boolean isFile;
+	
+	public FileOrSectorEntry(Object entry, boolean isFile)
+	{
+		this.entry = entry;
+		this.isFile = isFile;
+	}
+
+	public Object getEntry() {
+		return entry;
+	}
+
+	public void setEntry(Object entry) {
+		this.entry = entry;
+	}
+
+	public boolean isFile() {
+		return isFile;
+	}
+
+	public void setFile(boolean isFile) {
+		this.isFile = isFile;
+	}
 }
