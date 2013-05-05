@@ -1016,8 +1016,12 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	
 	private void actionButtonAddBadCluster()
 	{
-		System.out.println("You Selected : " +     
-     	       comboBoxBadClusters.getSelectedItem());
+		//System.out.println("You Selected : " +     
+     	//       comboBoxBadClusters.getSelectedItem());
+		
+		int selectedIndex = comboBoxBadClusters.getSelectedIndex();
+		if (selectedIndex == -1)
+			return;
 		
 		Object selected = comboBoxBadClusters.getSelectedItem();
 		if (selected == null)
@@ -1043,6 +1047,64 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		{return;}
 		
 		System.out.println("dataClusterNumber: " + dataClusterNumber);
+		
+		boolean unique = true;
+		
+		for (int j = 0; j < tableSelectedFiles.getRowCount(); j++)
+		{
+			FileOrSectorEntry fileOrSectorEntry = (FileOrSectorEntry) tableSelectedFiles.getValueAt(j, 0);
+			//Fat16Entry alreadyIncludedFile = null;
+			if (!fileOrSectorEntry.isFile())
+			{
+				Integer alreadyIncludedCluster = (Integer) fileOrSectorEntry.getEntry();
+				System.out.println("alreadyIncludedCluster: " + alreadyIncludedCluster + ", dataClusterNumber: " + dataClusterNumber);
+				
+				//alreadyIncludedFile = (Fat16Entry) fileOrSectorEntry.getEntry();
+				
+				if (alreadyIncludedCluster == dataClusterNumber)
+				{
+					unique = false;
+					break;
+				}
+			}
+		}
+		
+		if (unique)
+		{
+			Object[] row = new Object[8];
+    		
+    		//row[0] = file;
+    		Object entry = new Integer(dataClusterNumber);
+    		boolean isFile = false;
+    		FileOrSectorEntry fileOrSectorEntry = new FileOrSectorEntry(entry, isFile);
+    		row[0] = fileOrSectorEntry;
+    		
+    		row[1] = new String("Data cluster: " + dataClusterNumber);
+    		row[2] = new String("");
+    		row[3] = new String("");
+    		row[4] = new String("");
+    		row[5] = new String("");
+    		row[6] = new String("");
+    		row[7] = new String("");
+    		
+    		//row[1] = file.getLongFileName();
+    		//row[2] = file.getDirectoryPath();
+    		//row[3] = Long.toString((long)file.getStartingClusterNumber());
+    		//row[4] = OutputFormater.formatOutput(file.getFilesizeInBytes());
+    		//long totalClustersNeededForData = file.getTotalClustersNeededForData();
+    		//row[5] = Long.toString(totalClustersNeededForData);
+    		//long totalAllocatedSizeInBytes = totalClustersNeededForData * dataRegion16.getBytesPerCluster();
+    		//row[6] = OutputFormater.formatOutput(totalAllocatedSizeInBytes);
+    		//row[7] = OutputFormater.formatOutput(file.getFileSlackSizeInBytes());
+    		
+    		modelSelectedFiles.addRow(row);
+    		
+    		//Update label
+    		//selectedSlackFileSizeInBytes += file.getFileSlackSizeInBytes();
+    		selectedSlackFileSizeInBytes += dataRegion16.getBytesPerCluster();
+    		
+    		updateLabelSelectedSlackSize();
+		}
 	}
 }
 
