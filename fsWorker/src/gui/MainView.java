@@ -229,7 +229,8 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         //String[] petStrings = { "Mark data cluster as bad"};
         //String[] petStrings = { "Bird", "Cat", "Dog", "Rabbit", "Pig" }
         
-        for (int iClusterNumber = 2; iClusterNumber < fileSystemFAT16.getFATSizeInEntries(); iClusterNumber++)
+        // + 2, because fileSystemFAT16.getCountofClustersInDataRegion() ignores cluster 0 and 1
+        for (int iClusterNumber = 2; iClusterNumber < fileSystemFAT16.getCountofClustersInDataRegion() + 2; iClusterNumber++)
         {
         	boolean isAvailable = fileSystemFAT16.isClusterAvailable((char)iClusterNumber);
         	
@@ -989,8 +990,11 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 						int dataClusterNumber = Integer.parseInt(rowTokenizer.nextToken());
 						System.out.println("dataClusterNumber: " + dataClusterNumber);
 						
-						if (dataClusterNumber < 2 && dataClusterNumber >= fileSystemFAT16.getFATSizeInEntries())
+						// + 2, because fileSystemFAT16.getCountofClustersInDataRegion() ignores cluster 0 and 1
+						if (dataClusterNumber < 2 && dataClusterNumber >= fileSystemFAT16.getCountofClustersInDataRegion() + 2)
 						{errorBox("Wrong cluster number!", "Parse error");return;}
+						
+						//System.out.println("fileSystemFAT16.getFATSizeInEntries(): " + fileSystemFAT16.getFATSizeInEntries() + ", fileSystemFAT16.getCountofClustersInDataRegion(): " + fileSystemFAT16.getCountofClustersInDataRegion());
 						
 						DataTransfer dt = fileSystemFAT16.readFakeBadCluster((char)dataClusterNumber);
 						
