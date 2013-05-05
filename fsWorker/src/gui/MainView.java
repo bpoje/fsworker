@@ -121,11 +121,12 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private JButton buttonRefresh = new JButton("Refresh file system");
 	
 	private JPanel panelBadClusters = new JPanel();
-	private JLabel labelAddBadCluster = new JLabel("Mark as fake bad data cluster:");
+	private JLabel labelAddBadCluster = new JLabel("Mark or use as fake bad data cluster:");
 	private JComboBox comboBoxBadClusters = null;
 	private JButton buttonAddBadCluster = new JButton("Add");
 	
 	private ArrayList<String> selectBadClustersArrayList = new ArrayList<String>();
+	private ArrayList<Integer> usedClusters = new ArrayList<Integer>();
 	
 	//Output
 	private String textAreaString = "";
@@ -229,19 +230,23 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         //String[] petStrings = { "Mark data cluster as bad"};
         //String[] petStrings = { "Bird", "Cat", "Dog", "Rabbit", "Pig" }
         
+        //comboBoxBadClusters = new JComboBox();
+        
         // + 2, because fileSystemFAT16.getCountofClustersInDataRegion() ignores cluster 0 and 1
         for (int iClusterNumber = 2; iClusterNumber < fileSystemFAT16.getCountofClustersInDataRegion() + 2; iClusterNumber++)
         {
         	boolean isAvailable = fileSystemFAT16.isClusterAvailable((char)iClusterNumber);
+        	boolean isBad = fileSystemFAT16.isClusterBad((char)iClusterNumber);
         	
-        	if (isAvailable)
+        	if (isAvailable || isBad)
         	{
         		String sClusterNumber = " (" + OutputFormater.charToHexString((char)iClusterNumber) + ") " + (int)iClusterNumber;
         		selectBadClustersArrayList.add(sClusterNumber);
+        		//comboBoxBadClusters.addItem(sClusterNumber);
         	}
         }
-        
         comboBoxBadClusters = new JComboBox(selectBadClustersArrayList.toArray());
+        
         //comboBoxBadClusters = new JComboBox();
         //comboBoxBadClusters.setSelectedIndex(0);
         comboBoxBadClusters.addActionListener(this);
@@ -606,6 +611,8 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	
 	private void actionButtonWriteToFileSlack()
 	{
+		usedClusters.clear();
+		
 		if (fileToLoadData == null)
 		{
 			errorBox("No data file loaded!", "Load data file");
@@ -695,6 +702,8 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 					Integer dataClusterNumber = (Integer)fileOrSectorEntry.getEntry();
 					System.out.println("dataClusterNumber: " + dataClusterNumber);
 					
+					usedClusters.add(dataClusterNumber);
+					
 					//long fileSlackSizeInBytes = fat16Entry.getFileSlackSizeInBytes();
 					//System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
 					long fileSlackSizeInBytes = dataRegion16.getBytesPerCluster();
@@ -767,6 +776,8 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			System.out.println("bytesRemaining: " + bytesRemaining);
 			
 			fileInputStream.close();
+			
+			actionButtonRefresh();
 		}
 		catch (Exception exc)
 		{
@@ -782,6 +793,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		{
 			refreshBinTree();
 			dataTableComponent.refresh();
+			refreshComboBoxBadClusters();
 		}
 		catch (Exception exc)
 		{
@@ -1245,6 +1257,38 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
     		
     		updateLabelSelectedSlackSize();
 		}
+	}
+	
+	private void refreshComboBoxBadClusters() throws IOException, NotEnoughBytesReadException
+	{
+		/*
+		//comboBoxBadClusters.removeAll();
+		//selectBadClustersArrayList.clear();
+		
+		for (int i=0; i < usedClusters.size(); i++)
+		{
+			int usedClusterNumber = usedClusters.get(i);
+			System.out.println("usedClusterNumber: " + usedClusterNumber);
+			
+			for (int j=0; j < comboBoxBadClusters.getItemCount(); j++)
+			{
+				String cluster = (String) comboBoxBadClusters.getItemAt(j);
+				StringTokenizer stringTokenizer = new StringTokenizer(cluster, " ");
+				stringTokenizer.nextToken();
+				String sClusterNumber = stringTokenizer.nextToken();
+				int currentClusterNumber = Integer.parseInt(sClusterNumber);
+				
+				System.out.println("currentClusterNumber: " + currentClusterNumber);
+				
+				if (usedClusterNumber == currentClusterNumber)
+				{
+					System.out.println("removed j: " + j);
+					comboBoxBadClusters.remove(j);
+					break;
+				}
+			}
+		}
+		*/
 	}
 }
 
