@@ -639,49 +639,128 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				//System.out.println(modelSelectedFiles.getValueAt(i, 0));
 				//Fat16Entry fat16Entry = (Fat16Entry)modelSelectedFiles.getValueAt(i, 0);
 				Fat16Entry fat16Entry = null;
+				//Is file
 				if (fileOrSectorEntry.isFile())
+				{
 					fat16Entry = (Fat16Entry)fileOrSectorEntry.getEntry();
-				System.out.println("fat16Entry: " + fat16Entry);
-				
-				long fileSlackSizeInBytes = fat16Entry.getFileSlackSizeInBytes();
-				System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
-				
-				long numberOfBytesToRead;
-				if (bytesRemaining >= fileSlackSizeInBytes)
-				{
-					System.out.println("a");
-					numberOfBytesToRead = fileSlackSizeInBytes;
+					System.out.println("fat16Entry: " + fat16Entry);
+					
+					long fileSlackSizeInBytes = fat16Entry.getFileSlackSizeInBytes();
+					System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
+					
+					long numberOfBytesToRead;
+					if (bytesRemaining >= fileSlackSizeInBytes)
+					{
+						System.out.println("a");
+						numberOfBytesToRead = fileSlackSizeInBytes;
+					}
+					else
+					{
+						System.out.println("b");
+						numberOfBytesToRead = bytesRemaining;
+					}
+					
+					System.out.println("numberOfBytesToRead: " + numberOfBytesToRead);
+					
+					byte[] writeBuffer = new byte[(int)fileSlackSizeInBytes];
+					
+					int numBytesRead = fileInputStream.read(writeBuffer, 0, (int)numberOfBytesToRead);
+					
+					System.out.println("writeBuffer.length: " + writeBuffer.length);
+					
+					if (numBytesRead != (int)numberOfBytesToRead)
+					{
+						errorBox("Error reading data file!", "Error reading");
+						return;
+					}
+					
+					fat16Entry.writeToFileSlack(writeBuffer);
+					
+					bytesRemaining -= numberOfBytesToRead;
+					
+					//Text log output
+					//textAreaString += numberOfBytesToRead + "/" + fat16Entry.getFileSlackSizeInBytes() + "/" + fat16Entry.readFromFileSlack().getMd5() + fat16Entry.getDirectoryPath() + fat16Entry.getLongFileName() + "\n";
+					//textAreaWithScroll.setText(textAreaString);
+					textAreaString += "f/" +numberOfBytesToRead + "/" + fat16Entry.getFileSlackSizeInBytes() + "/" + fat16Entry.readFromFileSlack().getMd5() + fat16Entry.getDirectoryPath() + fat16Entry.getLongFileName() + "\n";
+					textAreaWithScroll.setText(textAreaString);
+					
+					if (bytesRemaining == 0)
+						break;
 				}
-				else
+				else //Is fake bad cluster
 				{
-					System.out.println("b");
-					numberOfBytesToRead = bytesRemaining;
+					//fat16Entry = (Fat16Entry)fileOrSectorEntry.getEntry();
+					//System.out.println("fat16Entry: " + fat16Entry);
+					Integer dataClusterNumber = (Integer)fileOrSectorEntry.getEntry();
+					System.out.println("dataClusterNumber: " + dataClusterNumber);
+					
+					//long fileSlackSizeInBytes = fat16Entry.getFileSlackSizeInBytes();
+					//System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
+					long fileSlackSizeInBytes = dataRegion16.getBytesPerCluster();
+					System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
+					
+					long numberOfBytesToRead;
+					if (bytesRemaining >= fileSlackSizeInBytes)
+					{
+						System.out.println("a");
+						numberOfBytesToRead = fileSlackSizeInBytes;
+					}
+					else
+					{
+						System.out.println("b");
+						numberOfBytesToRead = bytesRemaining;
+					}
+					
+					System.out.println("numberOfBytesToRead: " + numberOfBytesToRead);
+					
+					
+					byte[] writeBuffer = new byte[(int)fileSlackSizeInBytes];
+					
+					int numBytesRead = fileInputStream.read(writeBuffer, 0, (int)numberOfBytesToRead);
+					
+					System.out.println("writeBuffer.length: " + writeBuffer.length);
+					
+					if (numBytesRead != (int)numberOfBytesToRead)
+					{
+						errorBox("Error reading data file!", "Error reading");
+						return;
+					}
+					
+					//-----------------------------------------------------------------------------------
+					//fat16Entry.writeToFileSlack(writeBuffer);
+					int iDataClusterNumber = dataClusterNumber;
+					boolean success = fileSystemFAT16.writeFakeBadCluster((char)iDataClusterNumber, writeBuffer);
+					System.out.println("success writeFakeBadCluster: " + success);
+					
+					if (!success)
+					{
+						errorBox("Error writing data to fake bad cluster!", "Error writing");
+						return;
+					}
+					//-----------------------------------------------------------------------------------
+					
+					bytesRemaining -= numberOfBytesToRead;
+					
+					//-----------------------------------------------------------------------------------
+					//Text log output
+					//textAreaString += numberOfBytesToRead + "/" + fat16Entry.getFileSlackSizeInBytes() + "/" + fat16Entry.readFromFileSlack().getMd5() + fat16Entry.getDirectoryPath() + fat16Entry.getLongFileName() + "\n";
+					//textAreaWithScroll.setText(textAreaString);
+					
+					DataTransfer dt = fileSystemFAT16.readFakeBadCluster((char)iDataClusterNumber);
+					
+					if (dt.getPayload() == null)
+					{
+						errorBox("Error at data verification from fake bad cluster!", "Error writing");
+						return;
+					}
+					
+					textAreaString += "c/" + numberOfBytesToRead + "/" + dataRegion16.getBytesPerCluster() + "/" + dt.getMd5() + "/" + String.valueOf(iDataClusterNumber) + "\n";
+					textAreaWithScroll.setText(textAreaString);
+					//-----------------------------------------------------------------------------------
+					
+					if (bytesRemaining == 0)
+						break;
 				}
-				
-				System.out.println("numberOfBytesToRead: " + numberOfBytesToRead);
-				
-				byte[] writeBuffer = new byte[(int)fileSlackSizeInBytes];
-				
-				int numBytesRead = fileInputStream.read(writeBuffer, 0, (int)numberOfBytesToRead);
-				
-				System.out.println("writeBuffer.length: " + writeBuffer.length);
-				
-				if (numBytesRead != (int)numberOfBytesToRead)
-				{
-					errorBox("Error reading data file!", "Error reading");
-					return;
-				}
-				
-				fat16Entry.writeToFileSlack(writeBuffer);
-				
-				bytesRemaining -= numberOfBytesToRead;
-				
-				//Text log output
-				textAreaString += numberOfBytesToRead + "/" + fat16Entry.getFileSlackSizeInBytes() + "/" + fat16Entry.readFromFileSlack().getMd5() + fat16Entry.getDirectoryPath() + fat16Entry.getLongFileName() + "\n";
-				textAreaWithScroll.setText(textAreaString);
-				
-				if (bytesRemaining == 0)
-					break;
 			}
 			
 			System.out.println("bytesRemaining: " + bytesRemaining);
@@ -794,87 +873,144 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			{
 				StringTokenizer rowTokenizer = new StringTokenizer(row, "/");
 				
-				//Row should consist of at least 4 tokens
-				if (rowTokenizer.countTokens() < 4)
+				//Row should consist of at least 5 tokens
+				if (rowTokenizer.countTokens() < 5)
 				{errorBox("Parse error!", "Parse error");return;}
 				
 				try {
 					int numberOfTokens = rowTokenizer.countTokens();
 					
-					long slackSpaceUsedInBytes = Long.parseLong(rowTokenizer.nextToken());
-					long slackSpaceTotalInBytes = Long.parseLong(rowTokenizer.nextToken());
+					String fileOrCluster = rowTokenizer.nextToken();
 					
-					System.out.println("slackSpaceUsedInBytes: " + slackSpaceUsedInBytes);
-					System.out.println("slackSpaceTotalInBytes: " + slackSpaceTotalInBytes);
+					System.out.println("fileOrCluster: " + fileOrCluster);
 					
-					if (slackSpaceUsedInBytes > slackSpaceTotalInBytes)
-					{errorBox("Parse error!", "Parse error");return;}
-					
-					String fileSlackSpaceMd5 = rowTokenizer.nextToken();
-					System.out.println("fileSlackSpaceMd5: " + fileSlackSpaceMd5);
-					
-					String filePath = "";
-					//-4 as we called nextToken() three times and want to ignore the filename
-					for (int i = 0; i < numberOfTokens - 4; i++)
+					//Is file
+					if (fileOrCluster.compareToIgnoreCase("f") == 0)
 					{
-						filePath += "/" + rowTokenizer.nextToken();
-					}
-					filePath += "/";
-					
-					String fileName = rowTokenizer.nextToken();
-					
-					System.out.println("filePath: " + filePath);
-					System.out.println("fileName: " + fileName);
-					
-					//MOVE TO FILE PATH
-					//String pwd = fileSystemFAT16.getCurrentDirectoryPath();
-					//System.out.println("pwd: " + pwd);
-					
-					try {
-						if (!fileSystemFAT16.cd(filePath))
-						{errorBox("Cannot open path: " + filePath, "Parse error");return;}
-					}
-					catch (IOException exp)
-					{
-						errorBox("Parse error (IOException)!", "Parse error");return;
-					}
-					catch (NotEnoughBytesReadException exp)
-					{
-						errorBox("Parse error (NotEnoughBytesReadException)!", "Parse error");return;
-					}
-					
-					//pwd = fileSystemFAT16.getCurrentDirectoryPath();
-					//System.out.println("pwd: " + pwd);
-					
-					//Get content of current folder
-					ArrayList<FatEntry> dirContent = fileSystemFAT16.ls();
-					
-					//Go trough all entries in current directory
-					//We are searching for file with name equal to var. fileName
-					Fat16Entry fileEntry = null;
-					for (int i = 0; i < dirContent.size(); i++)
-					{
-						Fat16Entry fat16Entry = (Fat16Entry)dirContent.get(i);
+						long slackSpaceUsedInBytes = Long.parseLong(rowTokenizer.nextToken());
+						long slackSpaceTotalInBytes = Long.parseLong(rowTokenizer.nextToken());
 						
-						//If entry is the file we seek => store reference and break from loop
-						if (!fat16Entry.isSubdirectoryEntry() && fat16Entry.getLongFileName().compareToIgnoreCase(fileName) == 0)
+						System.out.println("slackSpaceUsedInBytes: " + slackSpaceUsedInBytes);
+						System.out.println("slackSpaceTotalInBytes: " + slackSpaceTotalInBytes);
+						
+						if (slackSpaceUsedInBytes > slackSpaceTotalInBytes)
+						{errorBox("Parse error!", "Parse error");return;}
+						
+						String fileSlackSpaceMd5 = rowTokenizer.nextToken();
+						System.out.println("fileSlackSpaceMd5: " + fileSlackSpaceMd5);
+						
+						String filePath = "";
+						//-5 as we called nextToken() four times and want to ignore the filename
+						for (int i = 0; i < numberOfTokens - 5; i++)
 						{
-							fileEntry = fat16Entry;
-							break;
+							filePath += "/" + rowTokenizer.nextToken();
 						}
-					}
-					
-					//File found
-					if (fileEntry != null)
-					{
-						DataTransfer dataTransfer = fileEntry.readFromFileSlack();
-						byte[] payload = dataTransfer.getPayload();
+						filePath += "/";
 						
+						String fileName = rowTokenizer.nextToken();
+						
+						System.out.println("filePath: " + filePath);
+						System.out.println("fileName: " + fileName);
+						
+						//MOVE TO FILE PATH
+						//String pwd = fileSystemFAT16.getCurrentDirectoryPath();
+						//System.out.println("pwd: " + pwd);
+						
+						try {
+							if (!fileSystemFAT16.cd(filePath))
+							{errorBox("Cannot open path: " + filePath, "Parse error");return;}
+						}
+						catch (IOException exp)
+						{
+							errorBox("Parse error (IOException)!", "Parse error");return;
+						}
+						catch (NotEnoughBytesReadException exp)
+						{
+							errorBox("Parse error (NotEnoughBytesReadException)!", "Parse error");return;
+						}
+						
+						//pwd = fileSystemFAT16.getCurrentDirectoryPath();
+						//System.out.println("pwd: " + pwd);
+						
+						//Get content of current folder
+						ArrayList<FatEntry> dirContent = fileSystemFAT16.ls();
+						
+						//Go trough all entries in current directory
+						//We are searching for file with name equal to var. fileName
+						Fat16Entry fileEntry = null;
+						for (int i = 0; i < dirContent.size(); i++)
+						{
+							Fat16Entry fat16Entry = (Fat16Entry)dirContent.get(i);
+							
+							//If entry is the file we seek => store reference and break from loop
+							if (!fat16Entry.isSubdirectoryEntry() && fat16Entry.getLongFileName().compareToIgnoreCase(fileName) == 0)
+							{
+								fileEntry = fat16Entry;
+								break;
+							}
+						}
+						
+						//File found
+						if (fileEntry != null)
+						{
+							DataTransfer dataTransfer = fileEntry.readFromFileSlack();
+							
+							if (dataTransfer.getMd5().compareToIgnoreCase(fileSlackSpaceMd5) != 0)
+							{errorBox("Error md5 of file slack space and input md5 are not equal!", "Error writing");return;}
+							
+							byte[] payload = dataTransfer.getPayload();
+							
+							
+							fileOutputStream.write(payload, 0, (int)slackSpaceUsedInBytes);
+						}
+						else
+						{errorBox("File does not exist: " + filePath + fileName, "Parse error");return;}
+						
+					}
+					//Is fake bad data cluster
+					else if (fileOrCluster.compareToIgnoreCase("c") == 0)
+					{
+						//Row describing data cluster consists of at 5 tokens
+						if (numberOfTokens != 5)
+						{errorBox("Parse error!", "Parse error");return;}
+						
+						long slackSpaceUsedInBytes = Long.parseLong(rowTokenizer.nextToken());
+						long slackSpaceTotalInBytes = Long.parseLong(rowTokenizer.nextToken());
+						
+						System.out.println("slackSpaceUsedInBytes: " + slackSpaceUsedInBytes);
+						System.out.println("slackSpaceTotalInBytes: " + slackSpaceTotalInBytes);
+						
+						if (slackSpaceUsedInBytes > slackSpaceTotalInBytes)
+						{errorBox("Parse error!", "Parse error");return;}
+						
+						String fileSlackSpaceMd5 = rowTokenizer.nextToken();
+						System.out.println("fileSlackSpaceMd5: " + fileSlackSpaceMd5);
+						
+						int dataClusterNumber = Integer.parseInt(rowTokenizer.nextToken());
+						System.out.println("dataClusterNumber: " + dataClusterNumber);
+						
+						if (dataClusterNumber < 2 && dataClusterNumber >= fileSystemFAT16.getFATSizeInEntries())
+						{errorBox("Wrong cluster number!", "Parse error");return;}
+						
+						DataTransfer dt = fileSystemFAT16.readFakeBadCluster((char)dataClusterNumber);
+						
+						if (dt.getPayload() == null)
+						{errorBox("Error at data verification from fake bad cluster!", "Error writing");return;}
+						
+						byte [] payload = dt.getPayload();
+						
+						if (dt.getMd5().compareToIgnoreCase(fileSlackSpaceMd5) != 0)
+						{errorBox("Error md5 of fake bad data cluster and input md5 are not equal!", "Error writing");return;}
 						
 						fileOutputStream.write(payload, 0, (int)slackSpaceUsedInBytes);
+						
+						//Clear cluster bad marking
+						fileSystemFAT16.clearFakeBadCluster((char)dataClusterNumber);
 					}
 					else
-					{errorBox("File does not exist: " + filePath + fileName, "Parse error");return;}
+					{
+						errorBox("Unknown marker (file or data cluster)!", "Parse error");return;
+					}
 				}
 				catch (NumberFormatException numberFormatException)	
 				{
