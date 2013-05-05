@@ -24,6 +24,7 @@ import java.util.StringTokenizer;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -118,6 +119,13 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	private JLabel labelSelectedSlackSize = new JLabel();
 	private JButton buttonReadFromFileSlack = new JButton("Read from file slack");
 	private JButton buttonRefresh = new JButton("Refresh file system");
+	
+	private JPanel panelBadClusters = new JPanel();
+	private JLabel labelAddBadCluster = new JLabel("Mark as fake bad data cluster:");
+	private JComboBox comboBoxBadClusters = null;
+	private JButton buttonAddBadCluster = new JButton("Add");
+	
+	private ArrayList<String> selectBadClustersArrayList = new ArrayList<String>();
 	
 	//Output
 	private String textAreaString = "";
@@ -218,6 +226,40 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
         updateLabelSelectedSlackSize();
         panelButtons.add(labelSelectedSlackSize);
         
+        //String[] petStrings = { "Mark data cluster as bad"};
+        //String[] petStrings = { "Bird", "Cat", "Dog", "Rabbit", "Pig" }
+        
+        for (int iClusterNumber = 2; iClusterNumber < fileSystemFAT16.getFATSizeInEntries(); iClusterNumber++)
+        {
+        	boolean isAvailable = fileSystemFAT16.isClusterAvailable((char)iClusterNumber);
+        	
+        	if (isAvailable)
+        	{
+        		String sClusterNumber = " (" + OutputFormater.charToHexString((char)iClusterNumber) + ") " + (int)iClusterNumber;
+        		selectBadClustersArrayList.add(sClusterNumber);
+        	}
+        }
+        
+        comboBoxBadClusters = new JComboBox(selectBadClustersArrayList.toArray());
+        //comboBoxBadClusters = new JComboBox();
+        //comboBoxBadClusters.setSelectedIndex(0);
+        comboBoxBadClusters.addActionListener(this);
+        /*
+        comboBoxBadClusters.addActionListener(new ActionListener() {
+        	   public void actionPerformed(ActionEvent e) {
+        	  System.out.print("You Selected : " +     
+        	       ((JComboBox)e.getSource()).getSelectedItem());
+        	   }
+        	 });
+        */
+        panelBadClusters.add(labelAddBadCluster);
+        
+        panelBadClusters.add(comboBoxBadClusters);
+        
+        buttonAddBadCluster.addActionListener(this);
+        panelBadClusters.add(buttonAddBadCluster);
+        
+        panelButtons.add(panelBadClusters);
         //---------------------------------------------------------
         
         //Data loading
@@ -400,6 +442,41 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		else if (e.getSource() == buttonRefresh)
 		{
 			actionButtonRefresh();
+		}
+		else if (e.getSource() == comboBoxBadClusters)
+		{
+			//System.out.println("You Selected : " +     
+	        //	       ((JComboBox)e.getSource()).getSelectedItem());
+		}
+		else if (e.getSource() == buttonAddBadCluster)
+		{
+			System.out.println("You Selected : " +     
+	        	       comboBoxBadClusters.getSelectedItem());
+			
+			Object selected = comboBoxBadClusters.getSelectedItem();
+			if (selected == null)
+				return;
+			
+			String sSelected = (String)selected;
+			StringTokenizer stringTokenizer = new StringTokenizer(sSelected," ");
+			
+			//Example value of sSelected: "(0x0002) 2"
+			if (stringTokenizer.countTokens() != 2)
+				return;
+			
+			stringTokenizer.nextToken();
+			String sDataClusterNumber = stringTokenizer.nextToken();
+			
+			int dataClusterNumber = 2;
+			
+			try
+			{
+				dataClusterNumber = Integer.parseInt(sDataClusterNumber);
+			}
+			catch (NumberFormatException exc)
+			{return;}
+			
+			System.out.println("dataClusterNumber: " + dataClusterNumber);
 		}
     }
 	

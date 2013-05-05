@@ -118,7 +118,6 @@ public class Main {
 			//EXAMPLE
 			//A pointer to directory entry
 			Fat16Entry directory = null;
-			
 			//Get the contents of the first (root) directory
 			System.out.println("(ls /)");
 			ArrayList<FatEntry> filesInDirectory = fileSystemFAT16.ls();
