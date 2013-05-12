@@ -517,10 +517,10 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		
 		int [] selectedRows = binTree.getSelectedRows();
         
-        System.out.print("selectedRows: ");
-        for (int i = 0; i < selectedRows.length; i++)
-        	System.out.print(selectedRows[i] + " ");
-        System.out.println();
+        //System.out.print("selectedRows: ");
+        //for (int i = 0; i < selectedRows.length; i++)
+        //	System.out.print(selectedRows[i] + " ");
+        //System.out.println();
         
         if (selectedRows.length > 0)
         {
@@ -578,7 +578,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	        		}
         		}
         	}
-        	System.out.println();
+        	//System.out.println();
         	
         	/*
         	long bytesPerAllocationUnit = (long)bootBlock16.getBPB_BytsPerSec() * (long)bootBlock16.getBPB_SecPerClus();
@@ -651,30 +651,30 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				if (fileOrSectorEntry.isFile())
 				{
 					fat16Entry = (Fat16Entry)fileOrSectorEntry.getEntry();
-					System.out.println("fat16Entry: " + fat16Entry);
+					//System.out.println("fat16Entry: " + fat16Entry);
 					
 					long fileSlackSizeInBytes = fat16Entry.getFileSlackSizeInBytes();
-					System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
+					//System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
 					
 					long numberOfBytesToRead;
 					if (bytesRemaining >= fileSlackSizeInBytes)
 					{
-						System.out.println("a");
+						//System.out.println("a");
 						numberOfBytesToRead = fileSlackSizeInBytes;
 					}
 					else
 					{
-						System.out.println("b");
+						//System.out.println("b");
 						numberOfBytesToRead = bytesRemaining;
 					}
 					
-					System.out.println("numberOfBytesToRead: " + numberOfBytesToRead);
+					//System.out.println("numberOfBytesToRead: " + numberOfBytesToRead);
 					
 					byte[] writeBuffer = new byte[(int)fileSlackSizeInBytes];
 					
 					int numBytesRead = fileInputStream.read(writeBuffer, 0, (int)numberOfBytesToRead);
 					
-					System.out.println("writeBuffer.length: " + writeBuffer.length);
+					//System.out.println("writeBuffer.length: " + writeBuffer.length);
 					
 					if (numBytesRead != (int)numberOfBytesToRead)
 					{
@@ -700,35 +700,35 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 					//fat16Entry = (Fat16Entry)fileOrSectorEntry.getEntry();
 					//System.out.println("fat16Entry: " + fat16Entry);
 					Integer dataClusterNumber = (Integer)fileOrSectorEntry.getEntry();
-					System.out.println("dataClusterNumber: " + dataClusterNumber);
+					//System.out.println("dataClusterNumber: " + dataClusterNumber);
 					
 					usedClusters.add(dataClusterNumber);
 					
 					//long fileSlackSizeInBytes = fat16Entry.getFileSlackSizeInBytes();
 					//System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
 					long fileSlackSizeInBytes = dataRegion16.getBytesPerCluster();
-					System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
+					//System.out.println("fileSlackSizeInBytes: " + fileSlackSizeInBytes);
 					
 					long numberOfBytesToRead;
 					if (bytesRemaining >= fileSlackSizeInBytes)
 					{
-						System.out.println("a");
+						//System.out.println("a");
 						numberOfBytesToRead = fileSlackSizeInBytes;
 					}
 					else
 					{
-						System.out.println("b");
+						//System.out.println("b");
 						numberOfBytesToRead = bytesRemaining;
 					}
 					
-					System.out.println("numberOfBytesToRead: " + numberOfBytesToRead);
+					//System.out.println("numberOfBytesToRead: " + numberOfBytesToRead);
 					
 					
 					byte[] writeBuffer = new byte[(int)fileSlackSizeInBytes];
 					
 					int numBytesRead = fileInputStream.read(writeBuffer, 0, (int)numberOfBytesToRead);
 					
-					System.out.println("writeBuffer.length: " + writeBuffer.length);
+					//System.out.println("writeBuffer.length: " + writeBuffer.length);
 					
 					if (numBytesRead != (int)numberOfBytesToRead)
 					{
@@ -740,7 +740,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 					//fat16Entry.writeToFileSlack(writeBuffer);
 					int iDataClusterNumber = dataClusterNumber;
 					boolean success = fileSystemFAT16.writeFakeBadCluster((char)iDataClusterNumber, writeBuffer);
-					System.out.println("success writeFakeBadCluster: " + success);
+					//System.out.println("success writeFakeBadCluster: " + success);
 					
 					if (!success)
 					{
@@ -773,7 +773,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				}
 			}
 			
-			System.out.println("bytesRemaining: " + bytesRemaining);
+			//System.out.println("bytesRemaining: " + bytesRemaining);
 			
 			fileInputStream.close();
 			
@@ -787,7 +787,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 	
 	private void actionButtonRefresh()
 	{
-		System.out.println("buttonRefresh");
+		//System.out.println("buttonRefresh");
 		
 		try
 		{
@@ -840,7 +840,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				if (firstRow.countTokens() != 2)
 				{errorBox("Parse error!", "Parse error");return;}
 				
-				System.out.println("countTokens(): " + firstRow.countTokens());
+				//System.out.println("countTokens(): " + firstRow.countTokens());
 				
 				firstRow.nextToken(); //Ignore info text
 				String temp = firstRow.nextToken(); //Original file name, it's size in bytes and it's hash
@@ -864,7 +864,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 					
 					originalFileHash = originalFileTokenizer.nextToken();
 					
-					System.out.println("originalFileHash: " + originalFileHash);
+					//System.out.println("originalFileHash: " + originalFileHash);
 				}
 				catch (FileNotFoundException fileNotFoundException)
 				{
@@ -877,8 +877,8 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 				
 				//originalFileName = firstRow.nextToken();
 				
-				System.out.println("originalFileName: " + originalFileName);
-				System.out.println("originalFileSize: " + originalFileSize);
+				//System.out.println("originalFileName: " + originalFileName);
+				//System.out.println("originalFileSize: " + originalFileSize);
 			}
 			else if (rowNum == 1)
 				; //Ignore info text
@@ -895,7 +895,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 					
 					String fileOrCluster = rowTokenizer.nextToken();
 					
-					System.out.println("fileOrCluster: " + fileOrCluster);
+					//System.out.println("fileOrCluster: " + fileOrCluster);
 					
 					//Is file
 					if (fileOrCluster.compareToIgnoreCase("f") == 0)
@@ -903,14 +903,14 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 						long slackSpaceUsedInBytes = Long.parseLong(rowTokenizer.nextToken());
 						long slackSpaceTotalInBytes = Long.parseLong(rowTokenizer.nextToken());
 						
-						System.out.println("slackSpaceUsedInBytes: " + slackSpaceUsedInBytes);
-						System.out.println("slackSpaceTotalInBytes: " + slackSpaceTotalInBytes);
+						//System.out.println("slackSpaceUsedInBytes: " + slackSpaceUsedInBytes);
+						//System.out.println("slackSpaceTotalInBytes: " + slackSpaceTotalInBytes);
 						
 						if (slackSpaceUsedInBytes > slackSpaceTotalInBytes)
 						{errorBox("Parse error!", "Parse error");return;}
 						
 						String fileSlackSpaceMd5 = rowTokenizer.nextToken();
-						System.out.println("fileSlackSpaceMd5: " + fileSlackSpaceMd5);
+						//System.out.println("fileSlackSpaceMd5: " + fileSlackSpaceMd5);
 						
 						String filePath = "";
 						//-5 as we called nextToken() four times and want to ignore the filename
@@ -922,8 +922,8 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 						
 						String fileName = rowTokenizer.nextToken();
 						
-						System.out.println("filePath: " + filePath);
-						System.out.println("fileName: " + fileName);
+						//System.out.println("filePath: " + filePath);
+						//System.out.println("fileName: " + fileName);
 						
 						//MOVE TO FILE PATH
 						//String pwd = fileSystemFAT16.getCurrentDirectoryPath();
@@ -990,17 +990,17 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 						long slackSpaceUsedInBytes = Long.parseLong(rowTokenizer.nextToken());
 						long slackSpaceTotalInBytes = Long.parseLong(rowTokenizer.nextToken());
 						
-						System.out.println("slackSpaceUsedInBytes: " + slackSpaceUsedInBytes);
-						System.out.println("slackSpaceTotalInBytes: " + slackSpaceTotalInBytes);
+						//System.out.println("slackSpaceUsedInBytes: " + slackSpaceUsedInBytes);
+						//System.out.println("slackSpaceTotalInBytes: " + slackSpaceTotalInBytes);
 						
 						if (slackSpaceUsedInBytes > slackSpaceTotalInBytes)
 						{errorBox("Parse error!", "Parse error");return;}
 						
 						String fileSlackSpaceMd5 = rowTokenizer.nextToken();
-						System.out.println("fileSlackSpaceMd5: " + fileSlackSpaceMd5);
+						//System.out.println("fileSlackSpaceMd5: " + fileSlackSpaceMd5);
 						
 						int dataClusterNumber = Integer.parseInt(rowTokenizer.nextToken());
-						System.out.println("dataClusterNumber: " + dataClusterNumber);
+						//System.out.println("dataClusterNumber: " + dataClusterNumber);
 						
 						// + 2, because fileSystemFAT16.getCountofClustersInDataRegion() ignores cluster 0 and 1
 						if (dataClusterNumber < 2 && dataClusterNumber >= fileSystemFAT16.getCountofClustersInDataRegion() + 2)
@@ -1041,10 +1041,10 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 					errorBox("Parse error (IOException)!", "Parse error");return;
 				}
 				
-				System.out.println("rowTokenizer.countTokens(): " + rowTokenizer.countTokens());
+				//System.out.println("rowTokenizer.countTokens(): " + rowTokenizer.countTokens());
 			}
 			
-			System.out.println(row);
+			//System.out.println(row);
 			
 			rowNum++;
 		}
@@ -1055,8 +1055,8 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			//Calculate hash of newly created file
 			String outputFileHash = Hash.getMd5FromFile(outputFile);
 			
-			System.out.println("outputFileHash: " + outputFileHash);
-			System.out.println("originalFileHash: " + originalFileHash);
+			//System.out.println("outputFileHash: " + outputFileHash);
+			//System.out.println("originalFileHash: " + originalFileHash);
 			
 			//Hash of restored file IS EQUAL to hash of original file
 			if (outputFileHash.compareToIgnoreCase(originalFileHash) == 0)
@@ -1198,7 +1198,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 		catch (NumberFormatException exc)
 		{return;}
 		
-		System.out.println("dataClusterNumber: " + dataClusterNumber);
+		//System.out.println("dataClusterNumber: " + dataClusterNumber);
 		
 		boolean unique = true;
 		
@@ -1209,7 +1209,7 @@ public class MainView extends JFrame implements ActionListener, MouseListener {
 			if (!fileOrSectorEntry.isFile())
 			{
 				Integer alreadyIncludedCluster = (Integer) fileOrSectorEntry.getEntry();
-				System.out.println("alreadyIncludedCluster: " + alreadyIncludedCluster + ", dataClusterNumber: " + dataClusterNumber);
+				//System.out.println("alreadyIncludedCluster: " + alreadyIncludedCluster + ", dataClusterNumber: " + dataClusterNumber);
 				
 				//alreadyIncludedFile = (Fat16Entry) fileOrSectorEntry.getEntry();
 				

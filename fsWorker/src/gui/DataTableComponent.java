@@ -111,7 +111,7 @@ public class DataTableComponent extends MouseAdapter {
 	
 	public void fillModel() throws IOException, NotEnoughBytesReadException
 	{
-		System.out.println("fillModel()");
+		//System.out.println("fillModel()");
 		
 		long numberOfDataClusters = fileSystemFAT16.getCountofClustersInDataRegion();
 		
@@ -221,8 +221,8 @@ public class DataTableComponent extends MouseAdapter {
 	{
 		int viewRow = table.getSelectedRow();
         int viewColumn = table.getSelectedColumn();
-        System.out.println("viewRow: " + viewRow);
-        System.out.println("viewColumn: " + viewColumn);
+        //System.out.println("viewRow: " + viewRow);
+        //System.out.println("viewColumn: " + viewColumn);
         if (viewRow < 0 || viewColumn < 0) {
             //Selection got filtered away.
             //label2.setText("");
@@ -251,7 +251,7 @@ public class DataTableComponent extends MouseAdapter {
             if (selectedDataClusterNumber.compareToIgnoreCase("") == 0)
             	return;
             
-            System.out.println("tableData.getRowCount(): " + tableData.getRowCount());
+            //System.out.println("tableData.getRowCount(): " + tableData.getRowCount());
             
             
             
@@ -259,13 +259,13 @@ public class DataTableComponent extends MouseAdapter {
             strTokenizer.nextToken();
             int clusterNumber =  Integer.parseInt(strTokenizer.nextToken());
             
-            System.out.println("clusterNumber: " + clusterNumber);
+            //System.out.println("clusterNumber: " + clusterNumber);
             
             long dataClusterAddress = fileSystemFAT16.getDataClusterAddress((char) clusterNumber);
            
             
             long bytesPerCluster = fileSystemFAT16.getBytesPerCluster();
-            System.out.println("bytesPerCluster: " + bytesPerCluster);
+            //System.out.println("bytesPerCluster: " + bytesPerCluster);
             
             byte[] data = null;
             try {

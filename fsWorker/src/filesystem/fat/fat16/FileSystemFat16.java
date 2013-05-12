@@ -192,7 +192,7 @@ public class FileSystemFat16 extends FileSystemFat{
 	//the letters.
 	private void cdRoot() throws IOException, NotEnoughBytesReadException
 	{
-		System.out.println("this.currentDirectoryPath: " + this.currentDirectoryPath);
+		//System.out.println("this.currentDirectoryPath: " + this.currentDirectoryPath);
 		
 		if (this.currentDirectoryPath.compareToIgnoreCase("/") == 0)
 			return;
@@ -240,7 +240,7 @@ public class FileSystemFat16 extends FileSystemFat{
 		{
 			String folderName = st.nextToken();
 			
-			System.out.println("folderName: " + folderName);
+			//System.out.println("folderName: " + folderName);
 			
 			//Get content of current folder
 			ArrayList<FatEntry> dirContent = this.ls();
@@ -424,7 +424,7 @@ public class FileSystemFat16 extends FileSystemFat{
 		//Is cluster bad
 		boolean isBad = fileAllocationTable16.isClusterBad(clusterNumber);
 		
-		System.out.println("isBad: " + isBad);
+		//System.out.println("isBad: " + isBad);
 		
 		//If cluster is not bad => failed
 		if (!isBad)
